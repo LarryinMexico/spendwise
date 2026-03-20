@@ -32,6 +32,19 @@ export const transactionStatusEnum = pgEnum("transaction_status", [
   "ignored",
 ]);
 
+// Uploads table - tracks CSV import batches
+export const uploads = pgTable("uploads", {
+  id: uuid("id").primaryKey().defaultRandom(),
+  clerkUserId: text("clerk_user_id").notNull(),
+  fileName: text("file_name").notNull(),
+  transactionCount: integer("transaction_count").notNull().default(0),
+  dateRangeStart: date("date_range_start"),
+  dateRangeEnd: date("date_range_end"),
+  createdAt: timestamp("created_at", { withTimezone: true })
+    .defaultNow()
+    .notNull(),
+});
+
 // Accounts table
 export const accounts = pgTable("accounts", {
   id: uuid("id").primaryKey().defaultRandom(),
@@ -69,6 +82,7 @@ export const transactions = pgTable("transactions", {
   accountId: uuid("account_id").references(() => accounts.id, {
     onDelete: "cascade",
   }),
+  uploadId: uuid("upload_id"),
 
   // Original data from CSV
   originalDate: date("original_date").notNull(),
@@ -127,4 +141,16 @@ export const transactionsRelations = relations(transactions, ({ one }) => ({
     fields: [transactions.accountId],
     references: [accounts.id],
   }),
+  upload: one(uploads, {
+    fields: [transactions.uploadId],
+    references: [uploads.id],
+  }),
+}));
+
+export const uploadsRelations = relations(uploads, ({ one, many }) => ({
+  clerkUser: one(accounts, {
+    fields: [uploads.clerkUserId],
+    references: [accounts.clerkUserId],
+  }),
+  transactions: many(transactions),
 }));

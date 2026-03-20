@@ -75,24 +75,24 @@ export async function POST(request: NextRequest) {
       console.error("Failed to get financial data:", e);
     }
 
-    const prompt = `你是個人財務顧問，幫助用戶做出明智的消費決策。
+    const prompt = `You are an elite financial advisor. Help the user make a smart consumption decision based on their financial data.
 
-**用戶真實財務資料：**
-- 月收入：$${monthlyIncome.toLocaleString()}
-- 月支出：$${monthlyExpense.toLocaleString()}
-- 本月餘額：$${currentBalance.toLocaleString()}
-- 消費類別平均（過去3個月）：
-${Object.entries(categoryAverages).map(([cat, avg]) => `  - ${cat}：$${avg.toFixed(0)}/月`).join("\n")}
+**User Financial Statement:**
+- Monthly Income: $${monthlyIncome.toFixed(2)}
+- Monthly Expense: $${monthlyExpense.toFixed(2)}
+- Current Net Balance (This Month): $${currentBalance.toFixed(2)}
+- Average Category Spend (Last 3 Months):
+${Object.entries(categoryAverages).map(([cat, avg]) => `  - ${cat}: $${avg.toFixed(2)}/mo`).join("\n")}
 
-**用戶問題：**
+**User Question:**
 "${question}"
 
-請用繁體中文回答，分析這個購買決策：
-1. 這個消費對你的財務有何影響？
-2. 對比其他月份的類別支出，這合理嗎？
-3. 建議購買、不購買、還是延後購買？
+Please analyze this purchase in English:
+1. Financial Impact: How does this affect their budget?
+2. Historical Comparison: Is this spend aligned with historical category averages?
+3. Verdict: Recommend Buy, Delay, or Skip.
 
-回答要溫暖但直接，2-3段落。`;
+Keep response professional, concise, and do not use any emojis. 2-3 paragraphs maximum.`;
 
     const { text } = await generateText({
       model: groq("llama-3.3-70b-versatile"),

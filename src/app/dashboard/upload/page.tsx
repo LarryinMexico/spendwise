@@ -24,7 +24,7 @@ export default function UploadPage() {
   const [bankFormat, setBankFormat] = useState<string>("");
 
   const handleClearData = async () => {
-    if (!confirm("確定要刪除所有交易資料嗎？此操作無法復原。")) return;
+    if (!confirm("Are you sure you want to delete all transaction records? This action cannot be undone.")) return;
 
     setIsClearing(true);
     try {
@@ -32,13 +32,13 @@ export default function UploadPage() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success(data.message);
+        toast.success("All data cleared successfully");
         router.refresh();
       } else {
-        toast.error(data.error || "刪除失敗");
+        toast.error(data.error || "Failed to clear data");
       }
     } catch {
-      toast.error("刪除失敗");
+      toast.error("An error occurred while clearing data");
     } finally {
       setIsClearing(false);
     }
@@ -51,9 +51,9 @@ export default function UploadPage() {
     if (result.success) {
       setParsedData(result.transactions);
       setBankFormat(result.bankFormat);
-      toast.success(`偵測到 ${result.bankFormat} 格式，共 ${result.transactions.length} 筆交易`);
+      toast.success(`Detected ${result.bankFormat} format with ${result.transactions.length} items`);
     } else {
-      toast.error("CSV 解析失敗", { description: result.errors.join(", ") });
+      toast.error("CSV Parsing Failed", { description: result.errors.join(", ") });
     }
   };
 
@@ -73,100 +73,98 @@ export default function UploadPage() {
       const data = await res.json();
 
       if (res.ok) {
-        toast.success(data.message);
+        toast.success("Statements uploaded successfully");
         router.push("/dashboard");
       } else {
-        toast.error(data.error || "上傳失敗");
+        toast.error(data.error || "Upload failed");
       }
     } catch (error) {
-      toast.error("上傳失敗");
+      toast.error("Upload failed");
     } finally {
       setIsUploading(false);
     }
   };
 
   return (
-    <div className="container mx-auto py-8 space-y-6">
-      <div>
-        <h1 className="text-3xl font-bold">上傳對帳單</h1>
-        <p className="text-muted-foreground mt-2">
-          上傳銀行 CSV 格式的對帳單，系統會自動解析交易記錄
-        </p>
-      </div>
-
-      <div className="flex justify-end">
+    <div className="container mx-auto py-8 space-y-6 max-w-4xl">
+      <div className="flex justify-between items-center">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">Import Financial Data</h1>
+          <p className="text-muted-foreground mt-2 text-sm">
+            Support bank standard CSV statements with automated parsing layout
+          </p>
+        </div>
         <Button
           variant="destructive"
           size="sm"
           onClick={handleClearData}
           disabled={isClearing}
+          className="bg-rose-500 hover:bg-rose-600 text-white"
         >
           <Trash2 className="mr-2 h-4 w-4" />
-          {isClearing ? "刪除中..." : "清除所有資料"}
+          {isClearing ? "Clearing..." : "Clear All Records"}
         </Button>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>選擇 CSV 檔案</CardTitle>
-          <CardDescription>
-            支援玉山銀行、國泰世華、中國信託等常見格式
+      <Card className="border border-[#E5E5E5] shadow-none bg-white rounded-md">
+        <CardHeader className="border-b border-[#E5E5E5] pb-4">
+          <CardTitle className="text-base font-semibold text-[#111111]">Import CSV File</CardTitle>
+          <CardDescription className="text-[#666666] text-xs">
+            Automatically maps generic financial formats upon file drop
           </CardDescription>
         </CardHeader>
-        <CardContent className="space-y-4">
+        <CardContent className="space-y-4 pt-4">
           <Dropzone onFileAccepted={handleFileAccepted} />
 
           {parsedData.length > 0 && (
-            <div className="space-y-4">
-              <div className="flex items-center justify-between">
+            <div className="space-y-4 animate-in fade-in duration-300">
+              <div className="flex items-center justify-between p-4 bg-[#FAFAFA] rounded-md border border-[#E5E5E5]">
                 <div>
-                  <p className="font-medium">{bankFormat}</p>
-                  <p className="text-sm text-muted-foreground">
-                    共 {parsedData.length} 筆交易
+                  <p className="font-semibold text-sm text-[#111111]">{bankFormat}</p>
+                  <p className="text-xs text-[#666666]">
+                    {parsedData.length} records processed
                   </p>
                 </div>
-                <Button onClick={handleUpload} disabled={isUploading}>
-                  {isUploading ? "上傳中..." : "確認上傳"}
+                <Button onClick={handleUpload} disabled={isUploading} className="bg-[#111111] hover:bg-[#222222] text-white rounded-md text-xs h-8">
+                  {isUploading ? "Uploading..." : "Confirm Upload"}
                 </Button>
               </div>
 
-              <div className="border rounded-lg overflow-hidden">
-                <table className="w-full text-sm">
-                  <thead className="bg-muted">
+              <div className="border border-[#E5E5E5] rounded-md overflow-hidden bg-white">
+                <table className="w-full text-xs">
+                  <thead className="bg-[#FAFAFA] text-[#111111] border-b border-[#E5E5E5]">
                     <tr>
-                      <th className="px-4 py-2 text-left">日期</th>
-                      <th className="px-4 py-2 text-left">摘要</th>
-                      <th className="px-4 py-2 text-right">金額</th>
-                      <th className="px-4 py-2 text-center">類型</th>
+                      <th className="px-4 py-3 text-left">Date</th>
+                      <th className="px-4 py-3 text-left">Description</th>
+                      <th className="px-4 py-3 text-right">Amount</th>
+                      <th className="px-4 py-3 text-center">Type</th>
                     </tr>
                   </thead>
-                  <tbody>
+                  <tbody className="divide-y divide-[#E5E5E5]">
                     {parsedData.slice(0, 10).map((tx, i) => (
-                      <tr key={i} className="border-t">
-                        <td className="px-4 py-2">{tx.date}</td>
-                        <td className="px-4 py-2 truncate max-w-xs">
+                      <tr key={i} className="hover:bg-[#F7F7F7] transition-colors">
+                        <td className="px-4 py-3 text-[#111111]">{tx.date}</td>
+                        <td className="px-4 py-3 truncate max-w-xs text-[#111111] font-sans">
                           {tx.description}
                         </td>
-                        <td
-                          className={`px-4 py-2 text-right ${
-                            tx.type === "income"
-                              ? "text-green-600"
-                              : "text-red-600"
-                          }`}
-                        >
+                        <td className="px-4 py-3 text-right font-mono text-[#111111] tabular-nums">
                           {tx.type === "income" ? "+" : "-"}
                           ${Math.abs(tx.amount).toLocaleString()}
                         </td>
-                        <td className="px-4 py-2 text-center">
-                          {tx.type === "income" ? "收入" : "支出"}
+                        <td className="px-4 py-3 text-center">
+                          <span className={`px-2 py-0.5 rounded text-[11px] font-medium border ${
+                            tx.type === "income" ? "border-emerald-500/30 bg-emerald-500/5 text-emerald-600" : "border-rose-500/30 bg-rose-500/5 text-rose-600"
+                          }`}>
+                            {tx.type === "income" ? "Income" : "Expense"}
+                          </span>
                         </td>
                       </tr>
                     ))}
                   </tbody>
                 </table>
                 {parsedData.length > 10 && (
-                  <p className="px-4 py-2 text-sm text-muted-foreground bg-muted">
-                    顯示前 10 筆，共 {parsedData.length} 筆
+                  <p className="px-4 py-2 text-xs text-[#666666] bg-[#FAFAFA] text-center border-t border-[#E5E5E5]">
+                    Showing first 10 items out of {parsedData.length} total.
                   </p>
                 )}
               </div>

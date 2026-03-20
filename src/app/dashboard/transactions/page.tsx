@@ -16,51 +16,60 @@ export default function TransactionsPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
-        <h1 className="text-3xl font-bold tracking-tight">所有交易歷史</h1>
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight text-[#111111]">Transactions</h1>
+          <p className="text-[#666666] text-sm mt-1">Review and manage billing statements</p>
+        </div>
       </div>
 
-      <Card>
-        <CardHeader>
-          <CardTitle>最近 100 筆交易</CardTitle>
+      <Card className="border border-[#E5E5E5] shadow-none bg-white rounded-md">
+        <CardHeader className="border-b border-[#E5E5E5] pb-4">
+          <CardTitle className="text-sm font-semibold text-[#111111]">Recent 100 Transactions</CardTitle>
         </CardHeader>
-        <CardContent>
+        <CardContent className="pt-4 px-0">
           {loading ? (
             <div className="flex h-32 items-center justify-center">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              <Loader2 className="h-4 w-4 animate-spin text-[#111111]" />
             </div>
           ) : transactions.length === 0 ? (
-            <div className="text-center text-muted-foreground py-12">
-              目前沒有任何交易記錄，請先到「上傳對帳單」頁面上傳。
+            <div className="text-center text-[#999999] py-12 text-sm font-sans border-dashed border-2 border-[#E5E5E5] rounded-md m-4">
+              No transactions found. Please import statements first.
             </div>
           ) : (
-            <div className="rounded-md border">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>日期</TableHead>
-                    <TableHead>說明</TableHead>
-                    <TableHead>類別</TableHead>
-                    <TableHead className="text-right">金額</TableHead>
+            <div className="overflow-x-auto">
+              <Table className="border-t border-[#E5E5E5]">
+                <TableHeader className="bg-[#FAFAFA]">
+                  <TableRow className="hover:bg-transparent border-b border-[#E5E5E5]">
+                    <TableHead className="px-6 py-3 text-left text-xs font-semibold text-[#666666]">Date</TableHead>
+                    <TableHead className="px-6 py-3 text-left text-xs font-semibold text-[#666666]">Description</TableHead>
+                    <TableHead className="px-6 py-3 text-left text-xs font-semibold text-[#666666]">Category</TableHead>
+                    <TableHead className="px-6 py-3 text-right text-xs font-semibold text-[#666666]">Amount</TableHead>
                   </TableRow>
                 </TableHeader>
-                <TableBody>
+                <TableBody className="divide-y divide-[#E5E5E5]">
                   {transactions.map((tx) => (
-                    <TableRow key={tx.id}>
-                      <TableCell className="font-medium">
+                    <TableRow key={tx.id} className="hover:bg-[#F7F7F7] border-b border-[#E5E5E5] transition-colors">
+                      <TableCell className="px-6 py-4 text-xs text-[#111111]">
                         {tx.originalDate ? tx.originalDate.substring(0, 10) : "-"}
                       </TableCell>
-                      <TableCell>{tx.originalDescription}</TableCell>
-                      <TableCell>
+                      <TableCell className="px-6 py-4 text-xs text-[#111111] font-sans">
+                        {tx.originalDescription}
+                      </TableCell>
+                      <TableCell className="px-6 py-4 text-xs text-[#111111]">
                         {tx.aiCategory ? (
-                          <Badge variant="secondary">{tx.aiCategory}</Badge>
+                          <span className="px-2 py-0.5 rounded text-[11px] font-medium border border-[#E5E5E5] bg-[#F7F7F7]">
+                            {tx.aiCategory}
+                          </span>
                         ) : (
-                          <Badge variant="outline">未分類</Badge>
+                          <span className="px-2 py-0.5 rounded text-[11px] text-[#999999] border border-[#E5E5E5] border-dashed">
+                            Unclassified
+                          </span>
                         )}
                       </TableCell>
-                      <TableCell className={`text-right font-medium ${
-                        tx.transactionType === "expense" ? "text-destructive" : "text-emerald-600"
+                      <TableCell className={`px-6 py-4 text-right font-mono text-xs tabular-nums font-medium ${
+                        tx.transactionType === "expense" ? "text-rose-600" : "text-emerald-600"
                       }`}>
                         {formatAmount(tx.normalizedAmount || tx.originalAmount, tx.transactionType || "expense")}
                       </TableCell>

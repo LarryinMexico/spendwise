@@ -117,13 +117,51 @@
 }
 
 @layer base {
+  :root {
+    --background: 100% 0 0; /* #FFFFFF */
+    --foreground: 14.1% 0.005 285.8; /* #111111 */
+    --card: 98.2% 0 0; /* #F7F7F7 */
+    --card-foreground: 14.1% 0.005 285.8;
+    --popover: 100% 0 0;
+    --popover-foreground: 14.1% 0.005 285.8;
+    --primary: 60.9% 0.126 221.7; /* #3B82F6 (Accent) */
+    --primary-foreground: 100% 0 0;
+    --secondary: 92.2% 0 0; /* #E5E5E5 */
+    --secondary-foreground: 14.1% 0.005 285.8;
+    --muted: 98.2% 0 0; /* #F7F7F7 */
+    --muted-foreground: 45.0% 0 0; /* #666666 */
+    --accent: 98.2% 0 0;
+    --accent-foreground: 14.1% 0.005 285.8;
+    --destructive: 63.7% 0.237 25.3;
+    --border: 92.2% 0 0; /* #E5E5E5 */
+    --input: 92.2% 0 0;
+    --ring: 60.9% 0.126 221.7;
+    --radius: 0.375rem;
+    --sidebar: 100% 0 0;
+    --sidebar-foreground: 14.1% 0.005 285.8;
+    --sidebar-border: 92.2% 0 0;
+  }
+
   * {
     @apply border-border outline-ring/50;
+    font-family: "Inter", system-ui, sans-serif;
   }
   body {
     @apply bg-background text-foreground;
   }
-  html {
-    @apply font-sans;
+  h1, h2, h3, h4 {
+    font-family: "Söhne", "Inter", sans-serif;
+    letter-spacing: -0.025em;
+    color: #111111;
   }
+  h1 {
+    font-size: 36px; /* 加大 28-32 -> 36px */
+    font-weight: 700;
+  }
+}
+
+/* 強調數字專用：Bungee */
+.font-bungee {
+  font-family: var(--font-bungee), monospace !important;
+  text-transform: uppercase;
 }

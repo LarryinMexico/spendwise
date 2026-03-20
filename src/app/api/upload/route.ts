@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { withUserDb } from "@/lib/db";
-import { transactions } from "@/lib/db/schema";
+import { transactions, uploads } from "@/lib/db/schema";
+import { sql } from "drizzle-orm";
 
 export async function POST(request: NextRequest) {
   try {
@@ -36,7 +37,6 @@ export async function POST(request: NextRequest) {
     const expenseCol = headers.find((h) => h.includes("支出") || h.toLowerCase().includes("debit"));
     const incomeCol = headers.find((h) => h.includes("存入") || h.toLowerCase().includes("credit"));
 
-    // Build all values first, then batch insert inside one transaction
     const valuesToInsert: {
       clerkUserId: string;
       accountId: string | null;
@@ -48,6 +48,9 @@ export async function POST(request: NextRequest) {
       rawCsvData: string;
     }[] = [];
 
+    let minDate = "";
+    let maxDate = "";
+
     for (const row of results.data as Record<string, string>[]) {
       const date = row[dateCol]?.trim();
       const description = row[descCol]?.trim() || "";
@@ -56,7 +59,6 @@ export async function POST(request: NextRequest) {
       const expenseStr = expenseCol ? (row[expenseCol] || "0").replace(/[,$]/g, "") : null;
       const incomeStr = incomeCol ? (row[incomeCol] || "0").replace(/[,$]/g, "") : null;
 
-      // Always take absolute value — CSV may store expense as negative
       const expenseAmount = expenseStr ? Math.abs(parseFloat(expenseStr)) : 0;
       const incomeAmount = incomeStr ? Math.abs(parseFloat(incomeStr)) : 0;
 
@@ -64,9 +66,11 @@ export async function POST(request: NextRequest) {
 
       const isIncome = incomeAmount > 0;
       const amount = isIncome ? incomeAmount : expenseAmount;
-      // normalizedAmount is ALWAYS positive; transactionType distinguishes direction
       const normalizedAmount = amount.toFixed(2);
       const type: "income" | "expense" = isIncome ? "income" : "expense";
+
+      if (!minDate || date < minDate) minDate = date;
+      if (!maxDate || date > maxDate) maxDate = date;
 
       valuesToInsert.push({
         clerkUserId: userId,
@@ -84,15 +88,35 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ success: true, message: "沒有可匯入的資料", count: 0 });
     }
 
-    // Insert all rows inside one withUserDb transaction (RLS is active within)
-    await withUserDb(userId, async (db) =>
-      db.insert(transactions).values(valuesToInsert)
-    );
+    let uploadId = "";
+
+    await withUserDb(userId, async (db) => {
+      const [upload] = await db
+        .insert(uploads)
+        .values({
+          clerkUserId: userId,
+          fileName: file.name,
+          transactionCount: valuesToInsert.length,
+          dateRangeStart: minDate || null,
+          dateRangeEnd: maxDate || null,
+        })
+        .returning();
+
+      uploadId = upload.id;
+
+      const txWithUpload = valuesToInsert.map((v) => ({
+        ...v,
+        uploadId: upload.id,
+      }));
+
+      await db.insert(transactions).values(txWithUpload);
+    });
 
     return NextResponse.json({
       success: true,
       message: `成功匯入 ${valuesToInsert.length} 筆交易`,
       count: valuesToInsert.length,
+      uploadId,
     });
   } catch (error) {
     console.error("Upload error:", error);

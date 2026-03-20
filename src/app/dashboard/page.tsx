@@ -1,9 +1,12 @@
+"use client";
+
 import { MonthlySummary } from "@/components/dashboard/monthly-summary";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { AICategorizeButton } from "@/components/dashboard/ai-categorize-button";
 import { QueryDialog } from "@/components/chat/query-dialog";
 import { CategoryPieChart } from "@/components/charts/category-pie-chart";
 import { MonthlyBarChart } from "@/components/charts/monthly-bar-chart";
+import { DataStats } from "@/components/dashboard/data-stats";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Upload, MessageSquare } from "lucide-react";
@@ -18,20 +21,22 @@ export default function DashboardPage() {
         </div>
         <div className="flex items-center gap-2">
           <QueryDialog>
-            <Button variant="outline">
-              <MessageSquare className="mr-2 h-4 w-4" />
+            <Button variant="outline" className="border-[#E5E5E5] text-[#111111] hover:bg-[#F7F7F7] shadow-none rounded-md">
+              <MessageSquare className="mr-2 h-4 w-4 text-[#111111]" />
               AI 查詢
             </Button>
           </QueryDialog>
           <AICategorizeButton />
           <Link href="/dashboard/upload">
-            <Button>
+            <Button className="bg-[#111111] hover:bg-[#222222] text-white shadow-none rounded-md">
               <Upload className="mr-2 h-4 w-4" />
-              上傳對帳單
+              上傳 CSV
             </Button>
           </Link>
         </div>
       </div>
+
+      <DataStats />
 
       <MonthlySummary />
       

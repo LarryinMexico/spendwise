@@ -12,16 +12,16 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useCategoryBreakdown } from "@/hooks/use-analytics";
 
 const COLORS = [
-  "hsl(var(--chart-1))",
-  "hsl(var(--chart-2))",
-  "hsl(var(--chart-3))",
-  "hsl(var(--chart-4))",
-  "hsl(var(--chart-5))",
-  "#8884d8",
-  "#82ca9d",
-  "#ffc658",
-  "#ff7c7c",
-  "#00bcd4",
+  "#2563eb", // 藍色
+  "#10b981", // 翠綠
+  "#f59e0b", // 琥珀
+  "#ef4444", // 猩紅
+  "#8b5cf6", // 紫色
+  "#ec4899", // 粉紅
+  "#06b6d4", // 青綠
+  "#f97316", // 橙色
+  "#14b8a6", // 湖水綠
+  "#6366f1", // 靛藍
 ];
 
 export function CategoryPieChart() {
