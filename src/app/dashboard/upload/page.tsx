@@ -13,13 +13,36 @@ import {
 } from "@/components/ui/card";
 import { toast } from "sonner";
 import { parseCSV, type ParsedTransaction } from "@/lib/csv/parser";
+import { Trash2 } from "lucide-react";
 
 export default function UploadPage() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
   const [parsedData, setParsedData] = useState<ParsedTransaction[]>([]);
   const [isUploading, setIsUploading] = useState(false);
+  const [isClearing, setIsClearing] = useState(false);
   const [bankFormat, setBankFormat] = useState<string>("");
+
+  const handleClearData = async () => {
+    if (!confirm("確定要刪除所有交易資料嗎？此操作無法復原。")) return;
+
+    setIsClearing(true);
+    try {
+      const res = await fetch("/api/transactions", { method: "DELETE" });
+      const data = await res.json();
+
+      if (res.ok) {
+        toast.success(data.message);
+        router.refresh();
+      } else {
+        toast.error(data.error || "刪除失敗");
+      }
+    } catch {
+      toast.error("刪除失敗");
+    } finally {
+      setIsClearing(false);
+    }
+  };
 
   const handleFileAccepted = async (acceptedFile: File) => {
     setFile(acceptedFile);
@@ -69,6 +92,18 @@ export default function UploadPage() {
         <p className="text-muted-foreground mt-2">
           上傳銀行 CSV 格式的對帳單，系統會自動解析交易記錄
         </p>
+      </div>
+
+      <div className="flex justify-end">
+        <Button
+          variant="destructive"
+          size="sm"
+          onClick={handleClearData}
+          disabled={isClearing}
+        >
+          <Trash2 className="mr-2 h-4 w-4" />
+          {isClearing ? "刪除中..." : "清除所有資料"}
+        </Button>
       </div>
 
       <Card>

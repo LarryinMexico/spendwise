@@ -4,6 +4,32 @@ import { db } from "@/lib/db";
 import { transactions } from "@/lib/db/schema";
 import { eq, desc, and, gte, lte } from "drizzle-orm";
 
+export async function DELETE(request: NextRequest) {
+  try {
+    const { userId } = await auth();
+
+    if (!userId) {
+      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    const { count } = await db
+      .delete(transactions)
+      .where(eq(transactions.clerkUserId, userId));
+
+    return NextResponse.json({
+      success: true,
+      message: `已刪除 ${count} 筆記錄`,
+      count,
+    });
+  } catch (error) {
+    console.error("Delete error:", error);
+    return NextResponse.json(
+      { error: "刪除失敗" },
+      { status: 500 }
+    );
+  }
+}
+
 export async function GET(request: NextRequest) {
   try {
     const { userId } = await auth();

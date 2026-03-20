@@ -24,7 +24,11 @@ export function useTransactions(limit = 10) {
     async function fetchTransactions() {
       try {
         const res = await fetch(`/api/transactions?limit=${limit}`);
-        if (!res.ok) throw new Error("取得交易失敗");
+        if (!res.ok) {
+          const body = await res.text().catch(() => "");
+          console.error("fetchTransactions failed with status:", res.status, body);
+          throw new Error("取得交易失敗");
+        }
         const data = await res.json();
         setTransactions(data.transactions || []);
       } catch (e) {
@@ -52,32 +56,37 @@ export function useMonthlySummary() {
     async function fetchSummary() {
       try {
         const now = new Date();
-        const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-          .toISOString()
-          .split("T")[0];
-        const endOfMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0)
-          .toISOString()
-          .split("T")[0];
+        const year = now.getFullYear();
+        const month = now.getMonth();
+
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        const startOfMonth = `${year}-${pad(month + 1)}-01`;
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const endOfMonth = `${year}-${pad(month + 1)}-${pad(lastDay)}`;
 
         const res = await fetch(
           `/api/transactions?limit=1000&startDate=${startOfMonth}&endDate=${endOfMonth}`
         );
-        if (!res.ok) throw new Error("取得摘要失敗");
+        if (!res.ok) {
+          const body = await res.text().catch(() => "");
+          console.error("fetchSummary failed with status:", res.status, body);
+          throw new Error("取得摘要失敗");
+        }
         const data = await res.json();
         const txs = data.transactions || [];
 
         const income = txs
           .filter((t: Transaction) => t.transactionType === "income")
-          .reduce((sum: number, t: Transaction) => sum + parseFloat(t.originalAmount), 0);
+          .reduce((sum: number, t: Transaction) => sum + parseFloat(t.normalizedAmount || t.originalAmount), 0);
 
         const expense = txs
           .filter((t: Transaction) => t.transactionType === "expense")
-          .reduce((sum: number, t: Transaction) => sum + parseFloat(t.originalAmount), 0);
+          .reduce((sum: number, t: Transaction) => sum + parseFloat(t.normalizedAmount || t.originalAmount), 0);
 
         setSummary({
           income,
-          expense,
-          balance: income - expense,
+          expense: Math.abs(expense), // ensure display is always positive
+          balance: income - Math.abs(expense),
         });
       } catch (e) {
         console.error("Summary error:", e);
