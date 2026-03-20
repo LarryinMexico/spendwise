@@ -40,7 +40,6 @@ export function AdjustmentSlider({
       </div>
       {mounted ? (
         <Slider
-          defaultValue={[0]}
           value={[value]}
           onValueChange={(vals) => {
             const val = Array.isArray(vals) ? vals[0] : vals;

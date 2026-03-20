@@ -1,36 +1,228 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# AI Finance Dashboard
 
-## Getting Started
+[Screenshot]
 
-First, run the development server:
+AI 驅動的個人理財儀表板，幫助你追蹤消費、AI 自動分類、以自然語言查詢財務數據。
+
+## ✨ 功能
+
+### 1. CSV 上傳與解析
+- 支援玉山銀行、國泰世華、中國信託對帳單格式
+- 拖放上傳，自動偵測欄位（日期、說明、支出、存入）
+- 批次匯入，支援單次多筆交易
+
+### 2. AI 自動分類
+- 使用 Groq API (Llama 3.3 70B) 智慧分類交易
+- 10+ 消費類別：餐飲、交通、購物、娛樂、醫療、教育、居住、薪資/收入、轉帳、其他
+- 批量處理，每批最多 20 筆（避免 API rate limit）
+
+### 3. 自然語言查詢 (Text-to-SQL)
+- 輸入：「這個月餐飲花了多少？」
+- AI 將自然語言轉換為 SQL 查詢
+- 三層安全防護：Prompt 限制、白名單驗證、參數化查詢
+
+### 4. 消費趨勢分析
+- 月度收支柱狀圖
+- 類別佔比圓餅圖
+- 行為洞察：
+  - 每週消費模式分析
+  - 異常交易偵測（2σ 標準差）
+  - 趨勢判斷（上升/下降/穩定）
+
+### 5. What-if 模擬器
+- 選擇消費類別，調整支出比例（-80% ~ +50%）
+- 即時計算 1/3/6/9/12 個月的預測
+- 視覺化折線圖對比：目前 vs 調整後趨勢
+- AI 生成財務建議
+
+### 6. 消費決策助手
+- 側邊欄即時輸入：「我想買 iPhone 16」
+- AI 根據真實財務數據分析：
+  - 月收入、支出、餘額
+  - 該類別歷史平均
+- 提供購買/延後/不購買建議
+
+## 🏗️ 技術架構
+
+```
+┌─────────────────────────────────────────────────────────┐
+│                      Frontend                            │
+│  Next.js 14 (App Router) + TypeScript + Tailwind CSS    │
+│  Shadcn UI Components + Recharts                        │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│                    Authentication                        │
+│              Clerk Auth (Free Tier)                     │
+│  - Social Login (Google, GitHub)                        │
+│  - Email/Password                                        │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│                    API Routes                            │
+│                    Next.js Route Handlers                │
+│  - /api/transactions    (CRUD)                          │
+│  - /api/upload          (CSV 解析)                       │
+│  - /api/categorize      (AI 分類)                        │
+│  - /api/query           (自然語言查詢)                     │
+│  - /api/simulator       (What-if 模擬)                   │
+│  - /api/interceptor      (決策分析)                       │
+│  - /api/analytics/*     (統計分析)                        │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│                    Database                              │
+│              Supabase PostgreSQL                        │
+│  - Row Level Security (RLS)                             │
+│  - Drizzle ORM                                          │
+└─────────────────────────────────────────────────────────┘
+                           │
+                           ▼
+┌─────────────────────────────────────────────────────────┐
+│                    AI Services                          │
+│              Groq API (Llama 3.3 70B)                   │
+│  - 交易分類                                              │
+│  - Text-to-SQL                                          │
+│  - 消費建議                                              │
+└─────────────────────────────────────────────────────────┘
+```
+
+## 🚀 本地開發
+
+### 前置需求
+- Node.js 18+
+- npm / yarn / pnpm / bun
+- Supabase 帳號
+- Clerk 帳號
+- Groq API Key
+
+### 1. Clone 並安裝
+
+```bash
+git clone <your-repo-url>
+cd ai-finance-dashboard
+npm install
+```
+
+### 2. 設定環境變數
+
+```bash
+cp .env.example .env.local
+```
+
+編輯 `.env.local`：
+
+| 變數 | 說明 | 取得方式 |
+|------|------|----------|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk 公開金鑰 | [Clerk Dashboard](https://clerk.com) → API Keys |
+| `CLERK_SECRET_KEY` | Clerk 私密金鑰 | [Clerk Dashboard](https://clerk.com) → API Keys |
+| `DATABASE_URL` | Supabase PostgreSQL 連線字串 | [Supabase Dashboard](https://supabase.com) → Settings → Database |
+| `GROQ_API_KEY` | Groq API 金鑰 | [Groq Console](https://console.groq.com) → API Keys |
+| `NEXT_PUBLIC_APP_URL` | 應用程式網址（本地為 `http://localhost:3000`） | - |
+
+### 3. 設定 Supabase
+
+1. 在 Supabase 建立新專案
+2. 取得 `DATABASE_URL` 連線字串
+3. 執行資料庫遷移：
+   ```bash
+   npm run db:migrate
+   ```
+4. 或手動執行 `drizzle/` 目錄下的 SQL 檔案
+
+### 4. 啟動開發伺服器
 
 ```bash
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+開啟 http://localhost:3000
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 5. 上傳測試資料
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+1. 前往「上傳」頁面
+2. 使用 `public/sample-transactions.csv` 測試檔案
+3. 上傳後點擊「AI 分類」按鈕
+4. 等待分類完成後，查看「總覽」頁面
 
-## Learn More
+## ☁️ 部署到 Vercel
 
-To learn more about Next.js, take a look at the following resources:
+### 1. 推送程式碼到 GitHub
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+```bash
+git init
+git add .
+git commit -m "Initial commit"
+git remote add origin <your-github-repo>
+git push -u origin main
+```
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+### 2. 在 Vercel 部署
 
-## Deploy on Vercel
+1. 前往 [Vercel Dashboard](https://vercel.com)
+2. 點擊「Add New Project」
+3. 選擇你的 GitHub 專案
+4. 設定環境變數（與本地相同）
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 3. 設定環境變數
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+在 Vercel 專案 Settings → Environment Variables 加入：
+
+| Name | Value | Environments |
+|------|-------|--------------|
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_test_xxx` | All |
+| `CLERK_SECRET_KEY` | `sk_test_xxx` | All |
+| `DATABASE_URL` | `postgresql://...` | All |
+| `GROQ_API_KEY` | `gsk_xxx` | All |
+| `NEXT_PUBLIC_APP_URL` | `https://your-app.vercel.app` | All |
+
+### 4. 部署
+
+點擊「Deploy」，Vercel 會自動：
+- 安裝依賴
+- 執行建置
+- 設定預覽 URL
+
+## 🗄️ 資料庫結構
+
+### transactions 表
+
+| 欄位 | 類型 | 說明 |
+|------|------|------|
+| `id` | UUID | 主鍵 |
+| `clerk_user_id` | TEXT | Clerk 使用者 ID（用於 RLS） |
+| `account_id` | TEXT | 帳戶 ID（可選） |
+| `original_date` | DATE | 原始交易日期 |
+| `original_description` | TEXT | 原始交易說明 |
+| `original_amount` | NUMERIC | 原始金額 |
+| `normalized_amount` | NUMERIC | 標準化金額（永遠為正） |
+| `transaction_type` | TEXT | `income` / `expense` / `transfer` |
+| `ai_category` | TEXT | AI 分類結果 |
+| `ai_category_confidence` | TEXT | AI 信心度分數 |
+| `status` | TEXT | `pending` / `categorized` |
+| `raw_csv_data` | JSONB | 原始 CSV 資料 |
+| `created_at` | TIMESTAMP | 建立時間 |
+| `auto_classified_at` | TIMESTAMP | AI 分類時間 |
+
+## 🔐 安全機制
+
+### 認證
+- 所有 API 路由都需要 Clerk 驗證
+- 未授權請求返回 401
+
+### 資料隔離
+- Supabase Row Level Security (RLS) 啟用
+- 每個查詢自動過濾 `clerk_user_id`
+
+### Text-to-SQL 安全
+- 只允許 SELECT 查詢
+- 白名單驗證：僅 `transactions` 表
+- 禁止模式偵測（UNION, DROP, etc.）
+- 自動注入 user 隔離條件
+
+## 📝 License
+
+MIT

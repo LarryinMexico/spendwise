@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { generateText } from "ai";
 import { groq } from "@ai-sdk/groq";
-import { sqlClient } from "@/lib/db";
+import { withUserDb } from "@/lib/db";
+import { sql } from "drizzle-orm";
 
 export const runtime = "nodejs";
 
@@ -26,50 +27,50 @@ export async function POST(request: NextRequest) {
     let categoryAverages: Record<string, number> = {};
 
     try {
-      // Get monthly summary
-      const now = new Date();
-      const year = now.getFullYear();
-      const month = now.getMonth();
-      const pad = (n: number) => n.toString().padStart(2, "0");
-      const startOfMonth = `${year}-${pad(month + 1)}-01`;
-      const lastDay = new Date(year, month + 1, 0).getDate();
-      const endOfMonth = `${year}-${pad(month + 1)}-${pad(lastDay)}`;
+      // Get summary and category averages using withUserDb
+      await withUserDb(userId, async (tx) => {
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = now.getMonth();
+        const pad = (n: number) => n.toString().padStart(2, "0");
+        const startOfMonth = `${year}-${pad(month + 1)}-01`;
+        const lastDay = new Date(year, month + 1, 0).getDate();
+        const endOfMonth = `${year}-${pad(month + 1)}-${pad(lastDay)}`;
 
-      const summaryRows = await sqlClient.unsafe(`
-        SELECT 
-          COALESCE(SUM(CASE WHEN transaction_type = 'income' THEN normalized_amount::numeric ELSE 0 END), 0) as income_total,
-          COALESCE(SUM(CASE WHEN transaction_type = 'expense' THEN normalized_amount::numeric ELSE 0 END), 0) as expense_total
-        FROM transactions
-        WHERE clerk_user_id = '${userId}'
-          AND original_date >= '${startOfMonth}'
-          AND original_date <= '${endOfMonth}'
-      `) as Record<string, unknown>[];
+        const summaryRows = await tx.execute(sql.raw(`
+          SELECT 
+            COALESCE(SUM(CASE WHEN transaction_type = 'income' THEN normalized_amount::numeric ELSE 0 END), 0) as income_total,
+            COALESCE(SUM(CASE WHEN transaction_type = 'expense' THEN normalized_amount::numeric ELSE 0 END), 0) as expense_total
+          FROM transactions
+          WHERE original_date >= '${startOfMonth}'
+            AND original_date <= '${endOfMonth}'
+        `)) as unknown as Record<string, unknown>[];
 
-      if (summaryRows.length > 0) {
-        monthlyIncome = Number(summaryRows[0].income_total) || 0;
-        monthlyExpense = Math.abs(Number(summaryRows[0].expense_total) || 0);
-        currentBalance = monthlyIncome - monthlyExpense;
-      }
+        if (summaryRows.length > 0) {
+          monthlyIncome = Number(summaryRows[0].income_total) || 0;
+          monthlyExpense = Math.abs(Number(summaryRows[0].expense_total) || 0);
+          currentBalance = monthlyIncome - monthlyExpense;
+        }
 
-      // Get category averages (last 3 months)
-      const categoryRows = await sqlClient.unsafe(`
-        SELECT 
-          COALESCE(ai_category, '未分類') as category,
-          AVG(normalized_amount::numeric) as avg_amount,
-          COUNT(*) as count
-        FROM transactions
-        WHERE clerk_user_id = '${userId}'
-          AND transaction_type = 'expense'
-          AND original_date >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '3 months'
-        GROUP BY 1
-        ORDER BY 2 DESC
-        LIMIT 10
-      `) as Record<string, unknown>[];
+        // Get category averages (last 3 months)
+        const categoryRows = await tx.execute(sql.raw(`
+          SELECT 
+            COALESCE(ai_category, '未分類') as category,
+            AVG(normalized_amount::numeric) as avg_amount,
+            COUNT(*) as count
+          FROM transactions
+          WHERE transaction_type = 'expense'
+            AND original_date >= DATE_TRUNC('month', CURRENT_DATE) - INTERVAL '3 months'
+          GROUP BY 1
+          ORDER BY 2 DESC
+          LIMIT 10
+        `)) as unknown as Record<string, unknown>[];
 
-      categoryAverages = {};
-      for (const row of categoryRows) {
-        categoryAverages[row.category as string] = Number(row.avg_amount) || 0;
-      }
+        categoryAverages = {};
+        for (const row of categoryRows) {
+          categoryAverages[row.category as string] = Number(row.avg_amount) || 0;
+        }
+      });
     } catch (e) {
       console.error("Failed to get financial data:", e);
     }
