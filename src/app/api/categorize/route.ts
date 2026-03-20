@@ -1,75 +1,67 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
+import { withUserDb } from "@/lib/db";
 import { transactions } from "@/lib/db/schema";
-import { eq, and, isNull } from "drizzle-orm";
+import { eq, and, inArray } from "drizzle-orm";
 import { categorizeTransactions } from "@/lib/ai/categorizer";
 
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
-
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const { transactionIds } = await request.json();
+    const body = await request.json();
+    const transactionIds = body.transactionIds as string[] | undefined;
 
-    let targetTransactions;
+    // Fetch pending transactions within an RLS-enabled transaction session
+    const targetTransactions = await withUserDb(userId, async (db) => {
+      const conditions = [
+        eq(transactions.clerkUserId, userId),
+        eq(transactions.status, "pending"),
+      ];
 
-    if (transactionIds && Array.isArray(transactionIds) && transactionIds.length > 0) {
-      const allTx = await db
+      if (transactionIds && transactionIds.length > 0) {
+        conditions.push(inArray(transactions.id, transactionIds));
+      }
+
+      return db
         .select({
           id: transactions.id,
           originalDescription: transactions.originalDescription,
         })
         .from(transactions)
-        .where(
-          and(
-            eq(transactions.clerkUserId, userId),
-            eq(transactions.status, "pending")
-          )
-        );
-
-      targetTransactions = allTx.filter((t) =>
-        transactionIds.includes(t.id)
-      );
-    } else {
-      targetTransactions = await db
-        .select({
-          id: transactions.id,
-          originalDescription: transactions.originalDescription,
-        })
-        .from(transactions)
-        .where(
-          and(
-            eq(transactions.clerkUserId, userId),
-            eq(transactions.status, "pending")
-          )
-        )
-        .limit(20);
-    }
+        .where(and(...conditions))
+        // Batch limit for classification load balancing
+        .limit(30);
+    });
 
     if (targetTransactions.length === 0) {
-      return NextResponse.json({
-        message: "沒有待分類的交易",
-        count: 0,
-      });
+      return NextResponse.json({ message: "沒有待分類的交易", count: 0 });
     }
 
+    // Call AI engine to generate categories
     const results = await categorizeTransactions(targetTransactions);
 
-    for (const [id, result] of results) {
-      await db
-        .update(transactions)
-        .set({
-          aiCategory: result.category,
-          aiCategoryConfidence: result.confidence.toString(),
-          status: "categorized",
-          autoClassifiedAt: new Date(),
-        })
-        .where(eq(transactions.id, id));
+    if (results.size === 0) {
+      return NextResponse.json({ message: "AI 無法對該批交易進行分類", count: 0 });
     }
+
+    // Write-back classification results using RLS sub-sessions
+    await withUserDb(userId, async (db) => {
+      for (const [id, result] of results) {
+        await db
+          .update(transactions)
+          .set({
+            aiCategory: result.category,
+            aiCategoryConfidence: result.confidence.toString(),
+            status: "categorized",
+            autoClassifiedAt: new Date(),
+          })
+          .where(and(eq(transactions.id, id), eq(transactions.clerkUserId, userId)));
+      }
+    });
 
     return NextResponse.json({
       message: `成功分類 ${results.size} 筆交易`,
@@ -77,9 +69,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Categorize error:", error);
-    return NextResponse.json(
-      { error: "分類失敗", details: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "分類失敗", details: String(error) }, { status: 500 });
   }
 }

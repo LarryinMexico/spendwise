@@ -10,13 +10,17 @@ import {
   FileText,
   TrendingUp,
   Settings,
+  Calculator,
+  Bird,
 } from "lucide-react";
+import { InterceptorInput } from "@/components/sidebar/interceptor-input";
 
 const navItems = [
   { href: "/dashboard", label: "總覽", icon: LayoutDashboard },
   { href: "/dashboard/upload", label: "上傳", icon: Upload },
   { href: "/dashboard/transactions", label: "交易", icon: FileText },
   { href: "/dashboard/analytics", label: "分析", icon: TrendingUp },
+  { href: "/dashboard/simulator", label: "模擬器", icon: Calculator },
 ];
 
 export function Sidebar() {
@@ -26,12 +30,13 @@ export function Sidebar() {
     <div className="flex h-screen w-64 flex-col border-r bg-card">
       <div className="flex h-14 items-center border-b px-4">
         <Link href="/dashboard" className="flex items-center gap-2">
-          <TrendingUp className="h-6 w-6" />
-          <span className="font-bold">Finance AI</span>
+          <Bird className="h-6 w-6 text-yellow-500 fill-yellow-400" />
+          <span className="font-bold text-lg tracking-wider text-amber-700">早安小雞</span>
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-1 p-2">
+      {/* Navigation Links with Scroll Container */}
+      <div className="flex-1 min-h-0 overflow-y-auto p-2 space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -52,7 +57,12 @@ export function Sidebar() {
             </Link>
           );
         })}
-      </nav>
+      </div>
+
+      {/* Consumption Assistant - Sticky at bottom above user profile */}
+      <div className="border-t bg-card/80 backdrop-blur-sm z-10">
+        <InterceptorInput />
+      </div>
 
       <div className="border-t p-4">
         <div className="flex items-center justify-between">

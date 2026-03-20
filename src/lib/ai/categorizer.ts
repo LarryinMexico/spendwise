@@ -60,17 +60,21 @@ ${descriptions}
   const results = new Map<string, CategorizationResult>();
 
   try {
-    const parsed = JSON.parse(text) as CategorizationResult[];
+    const cleanedText = text.replace(/```json\s*|```\s*/g, '').trim();
+    const parsed = JSON.parse(cleanedText) as CategorizationResult[];
 
     for (let i = 0; i < transactions.length && i < parsed.length; i++) {
-      results.set(transactions[i].id, {
-        category: parsed[i].category,
-        confidence: parsed[i].confidence,
-        reasoning: parsed[i].reasoning,
-      });
+       const item = parsed[i];
+       if (item && item.category) {
+          results.set(transactions[i].id, {
+            category: item.category,
+            confidence: item.confidence ?? 0.8,
+            reasoning: item.reasoning ?? "自動分類",
+          });
+       }
     }
   } catch (e) {
-    console.error("Failed to parse categorization response:", e);
+    console.error("Failed to parse categorization response. Text was:", text, e);
     throw new Error("AI 回應格式錯誤");
   }
 

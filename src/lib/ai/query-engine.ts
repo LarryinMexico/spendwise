@@ -1,6 +1,6 @@
 import { generateText } from "ai";
 import { groq } from "@ai-sdk/groq";
-import { sqlClient } from "@/lib/db";
+import { sqlClient, withUserRawSql } from "@/lib/db";
 
 export interface QueryResult {
   success: boolean;
@@ -13,7 +13,7 @@ export interface QueryResult {
 /** Fetch available months so AI has temporal context */
 async function getDataContext(userId: string): Promise<string> {
   try {
-    const rows = await sqlClient.unsafe(`
+    const rows = await withUserRawSql(userId, `
       SELECT
         TO_CHAR(original_date, 'YYYY-MM') as month,
         COUNT(*)::int as count,
@@ -24,7 +24,7 @@ async function getDataContext(userId: string): Promise<string> {
       GROUP BY 1
       ORDER BY 1 DESC
       LIMIT 12
-    `) as Record<string, unknown>[];
+    `);
 
     if (rows.length === 0) {
       return "【資料庫目前沒有任何交易記錄。使用者尚未上傳資料。】";
@@ -130,7 +130,7 @@ ${dataContext}
   // Step 3: Execute SQL
   let rows: Record<string, unknown>[] = [];
   try {
-    const result = await sqlClient.unsafe(generatedSQL);
+    const result = await withUserRawSql(userId, generatedSQL);
     rows = Array.isArray(result) ? (result as Record<string, unknown>[]) : [];
   } catch (e) {
     console.error("[query-engine] SQL execution error:", e, "\nSQL:", generatedSQL);

@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
+import { db, sqlClient } from "@/lib/db";
 import { transactions } from "@/lib/db/schema";
-import { eq, isNull } from "drizzle-orm";
+import { eq } from "drizzle-orm";
 import { categorizeTransactions } from "@/lib/ai/categorizer";
 
 const BATCH_SIZE = 20;
@@ -14,6 +14,8 @@ export async function POST() {
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
+
+    await sqlClient`SET LOCAL app.current_user_id = ${userId}`;
 
     const pendingTransactions = await db
       .select({

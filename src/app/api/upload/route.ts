@@ -1,12 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { db } from "@/lib/db";
+import { withUserDb } from "@/lib/db";
 import { transactions } from "@/lib/db/schema";
 
 export async function POST(request: NextRequest) {
   try {
     const { userId } = await auth();
-
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
@@ -20,50 +19,56 @@ export async function POST(request: NextRequest) {
     }
 
     const Papa = (await import("papaparse")).default;
-
     const text = await file.text();
     const results = Papa.parse(text, { header: true });
-
     const headers = results.meta.fields || [];
 
-    const dateCol = headers.find(
-      (h) => h.includes("日期") || h.includes("date") || h.includes("日期")
-    ) || headers[0];
+    const dateCol =
+      headers.find((h) => h.includes("日期") || h.toLowerCase().includes("date")) ||
+      headers[0];
     const descCol =
       headers.find(
-        (h) => h.includes("說明") || h.includes("description") || h.includes("摘要")
+        (h) =>
+          h.includes("說明") ||
+          h.includes("摘要") ||
+          h.toLowerCase().includes("description")
       ) || headers[1];
-    const expenseCol = headers.find(
-      (h) => h.includes("支出") || h.includes("debit")
-    );
-    const incomeCol = headers.find(
-      (h) => h.includes("存入") || h.includes("credit")
-    );
+    const expenseCol = headers.find((h) => h.includes("支出") || h.toLowerCase().includes("debit"));
+    const incomeCol = headers.find((h) => h.includes("存入") || h.toLowerCase().includes("credit"));
 
-    let insertedCount = 0;
+    // Build all values first, then batch insert inside one transaction
+    const valuesToInsert: {
+      clerkUserId: string;
+      accountId: string | null;
+      originalDate: string;
+      originalDescription: string;
+      originalAmount: string;
+      normalizedAmount: string;
+      transactionType: "income" | "expense";
+      rawCsvData: string;
+    }[] = [];
 
     for (const row of results.data as Record<string, string>[]) {
       const date = row[dateCol]?.trim();
       const description = row[descCol]?.trim() || "";
-
       if (!date || !description) continue;
 
       const expenseStr = expenseCol ? (row[expenseCol] || "0").replace(/[,$]/g, "") : null;
       const incomeStr = incomeCol ? (row[incomeCol] || "0").replace(/[,$]/g, "") : null;
 
-      // CSV 支出格式可能帶負號（如 -85）或為正數，需要取絕對值
+      // Always take absolute value — CSV may store expense as negative
       const expenseAmount = expenseStr ? Math.abs(parseFloat(expenseStr)) : 0;
       const incomeAmount = incomeStr ? Math.abs(parseFloat(incomeStr)) : 0;
 
       if (expenseAmount === 0 && incomeAmount === 0) continue;
 
       const isIncome = incomeAmount > 0;
-      // normalizedAmount 永遠存正數，用 transaction_type 區分方向
       const amount = isIncome ? incomeAmount : expenseAmount;
+      // normalizedAmount is ALWAYS positive; transactionType distinguishes direction
       const normalizedAmount = amount.toFixed(2);
-      const type = isIncome ? "income" : "expense";
+      const type: "income" | "expense" = isIncome ? "income" : "expense";
 
-      await db.insert(transactions).values({
+      valuesToInsert.push({
         clerkUserId: userId,
         accountId: accountId || null,
         originalDate: date,
@@ -73,20 +78,24 @@ export async function POST(request: NextRequest) {
         transactionType: type,
         rawCsvData: JSON.stringify(row),
       });
-
-      insertedCount++;
     }
+
+    if (valuesToInsert.length === 0) {
+      return NextResponse.json({ success: true, message: "沒有可匯入的資料", count: 0 });
+    }
+
+    // Insert all rows inside one withUserDb transaction (RLS is active within)
+    await withUserDb(userId, async (db) =>
+      db.insert(transactions).values(valuesToInsert)
+    );
 
     return NextResponse.json({
       success: true,
-      message: `成功匯入 ${insertedCount} 筆交易`,
-      count: insertedCount,
+      message: `成功匯入 ${valuesToInsert.length} 筆交易`,
+      count: valuesToInsert.length,
     });
   } catch (error) {
     console.error("Upload error:", error);
-    return NextResponse.json(
-      { error: "上傳失敗", details: String(error) },
-      { status: 500 }
-    );
+    return NextResponse.json({ error: "上傳失敗", details: String(error) }, { status: 500 });
   }
 }
