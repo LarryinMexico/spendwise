@@ -165,3 +165,18 @@
   font-family: var(--font-bungee), monospace !important;
   text-transform: uppercase;
 }
+
+/* react-day-picker custom styles */
+.rdp {
+  --rdp-cell-size: 40px;
+  --rdp-caption-font-size: 18px;
+  --rdp-accent-color: hsl(var(--primary));
+  --rdp-background-color: hsl(var(--accent));
+  --rdp-accent-color-dark: hsl(var(--primary));
+  --rdp-background-color-dark: hsl(var(--accent));
+}
+
+.rdp-head_cell {
+  text-transform: uppercase;
+  font-size: 0.75rem;
+}

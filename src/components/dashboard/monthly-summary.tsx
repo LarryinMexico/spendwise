@@ -10,8 +10,12 @@ import {
 import { useMonthlySummary } from "@/hooks/use-transactions";
 import { TrendingUp, TrendingDown, Wallet } from "lucide-react";
 
-export function MonthlySummary() {
-  const { summary, loading } = useMonthlySummary();
+export function MonthlySummary({
+  dateRange,
+}: {
+  dateRange: { from?: Date; to?: Date };
+}) {
+  const { summary, loading } = useMonthlySummary(dateRange);
 
   const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat("zh-TW", {
@@ -42,33 +46,33 @@ export function MonthlySummary() {
     <div className="grid gap-4 md:grid-cols-3">
       <Card className="shadow-none border border-[#E5E5E5] bg-[#FAFAFA] rounded-md">
         <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[#E5E5E5]">
-          <CardTitle className="text-xs font-semibold tracking-tight text-[#666666]">本月收入</CardTitle>
+          <CardTitle className="text-xs font-semibold tracking-tight text-[#666666]">期間收入</CardTitle>
           <TrendingUp className="h-3.5 w-3.5 text-[#111111]" />
         </CardHeader>
         <CardContent className="flex flex-col items-end pt-4">
           <div className="font-bungee text-2xl text-[#111111] tabular-nums">
             {formatCurrency(summary.income)}
           </div>
-          <p className="text-xs text-[#999999] mt-1">本月總收益</p>
+          <p className="text-xs text-[#999999] mt-1">期間總收益</p>
         </CardContent>
       </Card>
 
       <Card className="shadow-none border border-[#E5E5E5] bg-[#FAFAFA] rounded-md">
         <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[#E5E5E5]">
-          <CardTitle className="text-xs font-semibold tracking-tight text-[#666666]">本月支出</CardTitle>
+          <CardTitle className="text-xs font-semibold tracking-tight text-[#666666]">期間支出</CardTitle>
           <TrendingDown className="h-3.5 w-3.5 text-[#111111]" />
         </CardHeader>
         <CardContent className="flex flex-col items-end pt-4">
           <div className="font-bungee text-2xl text-[#111111] tabular-nums">
             {formatCurrency(summary.expense)}
           </div>
-          <p className="text-xs text-[#999999] mt-1">本月總支出</p>
+          <p className="text-xs text-[#999999] mt-1">期間總支出</p>
         </CardContent>
       </Card>
 
       <Card className="shadow-none border border-[#E5E5E5] bg-[#FAFAFA] rounded-md">
         <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[#E5E5E5]">
-          <CardTitle className="text-xs font-semibold tracking-tight text-[#666666]">本月結餘</CardTitle>
+          <CardTitle className="text-xs font-semibold tracking-tight text-[#666666]">期間結餘</CardTitle>
           <Wallet className="h-3.5 w-3.5 text-[#111111]" />
         </CardHeader>
         <CardContent className="flex flex-col items-end pt-4">

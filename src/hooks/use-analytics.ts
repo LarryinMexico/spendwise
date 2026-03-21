@@ -13,14 +13,32 @@ export interface CategoryBreakdownData {
   value: number;
 }
 
-export function useMonthlyTrend(months = 6) {
+function buildUrl(path: string, dateRange?: { from?: Date; to?: Date }) {
+  const url = new URL(path, window.location.origin);
+  if (dateRange?.from) {
+    url.searchParams.append("startDate", dateRange.from.toISOString().split("T")[0]);
+  }
+  if (dateRange?.to) {
+    url.searchParams.append("endDate", dateRange.to.toISOString().split("T")[0]);
+  }
+  return url.toString();
+}
+
+export function useMonthlyTrend(dateRange?: { from?: Date; to?: Date }) {
   const [data, setData] = useState<MonthlyTrendData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
+      if (!dateRange?.from || !dateRange?.to) {
+        setLoading(false);
+        setData([]);
+        return;
+      }
+      setLoading(true);
       try {
-        const res = await fetch(`/api/analytics/monthly-trend?months=${months}`);
+        const url = buildUrl("/api/analytics/monthly-trend", dateRange);
+        const res = await fetch(url);
         if (!res.ok) throw new Error("取得資料失敗");
         const result = await res.json();
         setData(result.data || []);
@@ -33,19 +51,26 @@ export function useMonthlyTrend(months = 6) {
     }
 
     fetchData();
-  }, [months]);
+  }, [dateRange]);
 
   return { data, loading };
 }
 
-export function useCategoryBreakdown() {
+export function useCategoryBreakdown(dateRange?: { from?: Date; to?: Date }) {
   const [data, setData] = useState<CategoryBreakdownData[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     async function fetchData() {
+      if (!dateRange?.from || !dateRange?.to) {
+        setLoading(false);
+        setData([]);
+        return;
+      }
+      setLoading(true);
       try {
-        const res = await fetch("/api/analytics/category-breakdown");
+        const url = buildUrl("/api/analytics/category-breakdown", dateRange);
+        const res = await fetch(url);
         if (!res.ok) throw new Error("取得資料失敗");
         const result = await res.json();
         setData(result.data || []);
@@ -58,7 +83,7 @@ export function useCategoryBreakdown() {
     }
 
     fetchData();
-  }, []);
+  }, [dateRange]);
 
   return { data, loading };
 }

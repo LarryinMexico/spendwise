@@ -1,5 +1,7 @@
 "use client";
 
+import { useDateRange } from "@/hooks/use-date-range";
+import { DateRangePicker } from "@/components/dashboard/date-range-picker";
 import { MonthlySummary } from "@/components/dashboard/monthly-summary";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { AICategorizeButton } from "@/components/dashboard/ai-categorize-button";
@@ -12,6 +14,8 @@ import { Button } from "@/components/ui/button";
 import { Upload, MessageSquare } from "lucide-react";
 
 export default function DashboardPage() {
+  const { date, setDate, preset, setPreset } = useDateRange();
+
   return (
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
@@ -20,12 +24,12 @@ export default function DashboardPage() {
           <p className="text-muted-foreground">查看你的財務概況</p>
         </div>
         <div className="flex items-center gap-2">
-          <QueryDialog>
-            <Button variant="outline" className="border-[#E5E5E5] text-[#111111] hover:bg-[#F7F7F7] shadow-none rounded-md">
-              <MessageSquare className="mr-2 h-4 w-4 text-[#111111]" />
-              AI 查詢
-            </Button>
-          </QueryDialog>
+          <DateRangePicker
+            date={date}
+            setDate={setDate}
+            preset={preset}
+            setPreset={setPreset}
+          />
           <AICategorizeButton />
           <Link href="/dashboard/upload">
             <Button className="bg-[#111111] hover:bg-[#222222] text-white shadow-none rounded-md">
@@ -38,14 +42,14 @@ export default function DashboardPage() {
 
       <DataStats />
 
-      <MonthlySummary />
+      <MonthlySummary dateRange={date || { from: undefined, to: undefined }} />
       
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-7">
         <div className="col-span-4">
-          <MonthlyBarChart />
+          <MonthlyBarChart dateRange={date} />
         </div>
         <div className="col-span-3">
-          <CategoryPieChart />
+          <CategoryPieChart dateRange={date} />
         </div>
       </div>
 

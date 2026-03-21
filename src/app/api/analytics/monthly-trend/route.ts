@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { withUserDb } from "@/lib/db";
 import { transactions } from "@/lib/db/schema";
-import { eq, and, gte, sql } from "drizzle-orm";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -12,13 +12,14 @@ export async function GET(request: NextRequest) {
     }
 
     const searchParams = request.nextUrl.searchParams;
-    const months = parseInt(searchParams.get("months") || "6");
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
 
-    const start = new Date();
-    start.setDate(1);
-    start.setMonth(start.getMonth() - (months - 1));
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    const startDate = `${start.getFullYear()}-${pad(start.getMonth() + 1)}-01`;
+    const conditions = [
+      eq(transactions.clerkUserId, userId),
+    ];
+    if (startDate) conditions.push(gte(transactions.originalDate, startDate));
+    if (endDate) conditions.push(lte(transactions.originalDate, endDate));
 
     const results = await withUserDb(userId, async (db) =>
       db
@@ -28,12 +29,7 @@ export async function GET(request: NextRequest) {
           totalIncome: sql<string>`COALESCE(SUM(CASE WHEN transaction_type = 'income' THEN normalized_amount::numeric ELSE 0 END), 0)`,
         })
         .from(transactions)
-        .where(
-          and(
-            eq(transactions.clerkUserId, userId),
-            gte(transactions.originalDate, startDate)
-          )
-        )
+        .where(and(...conditions))
         .groupBy(sql`TO_CHAR(original_date::date, 'YYYY-MM')`)
         .orderBy(sql`TO_CHAR(original_date::date, 'YYYY-MM')`)
     );

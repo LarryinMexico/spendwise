@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { withUserDb } from "@/lib/db";
 import { transactions } from "@/lib/db/schema";
-import { eq, and, gte, sql } from "drizzle-orm";
+import { eq, and, gte, lte, sql } from "drizzle-orm";
 
 export async function GET(request: NextRequest) {
   try {
@@ -11,9 +11,16 @@ export async function GET(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const now = new Date();
-    const pad = (n: number) => n.toString().padStart(2, "0");
-    const startOfMonth = `${now.getFullYear()}-${pad(now.getMonth() + 1)}-01`;
+    const searchParams = request.nextUrl.searchParams;
+    const startDate = searchParams.get("startDate");
+    const endDate = searchParams.get("endDate");
+
+    const conditions = [
+      eq(transactions.clerkUserId, userId),
+      eq(transactions.transactionType, "expense"),
+    ];
+    if (startDate) conditions.push(gte(transactions.originalDate, startDate));
+    if (endDate) conditions.push(lte(transactions.originalDate, endDate));
 
     const results = await withUserDb(userId, async (db) =>
       db
@@ -22,13 +29,7 @@ export async function GET(request: NextRequest) {
           total: sql<string>`COALESCE(SUM(normalized_amount::numeric), 0)`,
         })
         .from(transactions)
-        .where(
-          and(
-            eq(transactions.clerkUserId, userId),
-            eq(transactions.transactionType, "expense"),
-            gte(transactions.originalDate, startOfMonth)
-          )
-        )
+        .where(and(...conditions))
         .groupBy(sql`COALESCE(ai_category, '未分類')`)
         .orderBy(sql`SUM(normalized_amount::numeric) DESC`)
     );

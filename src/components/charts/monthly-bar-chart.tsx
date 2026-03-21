@@ -11,11 +11,17 @@ import {
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useMonthlyTrend } from "@/hooks/use-analytics";
+import { useState, useEffect } from "react";
 
-export function MonthlyBarChart() {
-  const { data, loading } = useMonthlyTrend();
+export function MonthlyBarChart({ dateRange }: { dateRange?: { from?: Date; to?: Date } }) {
+  const { data, loading } = useMonthlyTrend(dateRange);
+  const [isMounted, setIsMounted] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (loading || !isMounted) {
     return (
       <Card>
         <CardHeader>
@@ -37,7 +43,7 @@ export function MonthlyBarChart() {
       </CardHeader>
       <CardContent className="pt-6">
         <div className="h-[280px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minHeight={0}>
             <BarChart data={data} margin={{ top: 15, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
               <XAxis

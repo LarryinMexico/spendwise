@@ -12,15 +12,15 @@ import {
   Settings,
   Calculator,
   History,
-  Lightbulb,
+  MessageSquare,
 } from "lucide-react";
-import { InterceptorInput } from "@/components/sidebar/interceptor-input";
 
 const navItems = [
   { href: "/dashboard", label: "總覽", icon: LayoutDashboard },
   { href: "/dashboard/transactions", label: "交易", icon: FileText },
   { href: "/dashboard/analytics", label: "分析", icon: TrendingUp },
   { href: "/dashboard/simulator", label: "模擬器", icon: Calculator },
+  { href: "/dashboard/interceptor", label: "消費決策", icon: MessageSquare },
   { href: "/dashboard/upload", label: "上傳", icon: Upload },
   { href: "/dashboard/uploads", label: "上傳記錄", icon: History },
 ];
@@ -61,8 +61,6 @@ export function Sidebar() {
           );
         })}
       </div>
-
-      <InterceptorInput />
 
       <div className="border-t p-4">
         <div className="flex items-center justify-between">

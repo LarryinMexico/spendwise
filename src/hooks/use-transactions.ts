@@ -44,7 +44,7 @@ export function useTransactions(limit = 10) {
   return { transactions, loading, error };
 }
 
-export function useMonthlySummary() {
+export function useMonthlySummary(dateRange: { from?: Date; to?: Date }) {
   const [summary, setSummary] = useState({
     income: 0,
     expense: 0,
@@ -54,18 +54,15 @@ export function useMonthlySummary() {
 
   useEffect(() => {
     async function fetchSummary() {
-      try {
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
+      if (!dateRange.from || !dateRange.to) return;
 
+      try {
         const pad = (n: number) => n.toString().padStart(2, "0");
-        const startOfMonth = `${year}-${pad(month + 1)}-01`;
-        const lastDay = new Date(year, month + 1, 0).getDate();
-        const endOfMonth = `${year}-${pad(month + 1)}-${pad(lastDay)}`;
+        const startDate = `${dateRange.from.getFullYear()}-${pad(dateRange.from.getMonth() + 1)}-${pad(dateRange.from.getDate())}`;
+        const endDate = `${dateRange.to.getFullYear()}-${pad(dateRange.to.getMonth() + 1)}-${pad(dateRange.to.getDate())}`;
 
         const res = await fetch(
-          `/api/transactions?limit=1000&startDate=${startOfMonth}&endDate=${endOfMonth}`
+          `/api/transactions?limit=1000&startDate=${startDate}&endDate=${endDate}`
         );
         if (!res.ok) {
           const body = await res.text().catch(() => "");
@@ -96,7 +93,7 @@ export function useMonthlySummary() {
     }
 
     fetchSummary();
-  }, []);
+  }, [dateRange]);
 
   return { summary, loading };
 }

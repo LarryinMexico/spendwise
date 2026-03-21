@@ -10,6 +10,7 @@ import {
 } from "recharts";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useCategoryBreakdown } from "@/hooks/use-analytics";
+import { useState, useEffect } from "react";
 
 const COLORS = [
   "#2563eb", // 藍色
@@ -24,10 +25,15 @@ const COLORS = [
   "#6366f1", // 靛藍
 ];
 
-export function CategoryPieChart() {
-  const { data, loading } = useCategoryBreakdown();
+export function CategoryPieChart({ dateRange }: { dateRange?: { from?: Date; to?: Date } }) {
+  const { data, loading } = useCategoryBreakdown(dateRange);
+  const [isMounted, setIsMounted] = useState(false);
 
-  if (loading) {
+  useEffect(() => {
+    setIsMounted(true);
+  }, []);
+
+  if (loading || !isMounted) {
     return (
       <Card>
         <CardHeader>
@@ -65,7 +71,7 @@ export function CategoryPieChart() {
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%">
+          <ResponsiveContainer width="100%" height="100%" minHeight={0}>
             <PieChart>
               <Pie
                 data={data}

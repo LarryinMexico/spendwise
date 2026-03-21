@@ -32,10 +32,7 @@ export function ProjectionChart({ data, category }: ProjectionChartProps) {
     setIsMounted(true);
   }, []);
 
-  if (!isMounted) {
-    return <div className="h-[300px] flex items-center justify-center text-muted-foreground">載入中...</div>;
-  }
-  if (!data || data.length === 0) {
+  if (!isMounted || !data || data.length === 0) {
     return (
       <Card className="col-span-1 lg:col-span-2">
         <CardHeader>
@@ -61,7 +58,7 @@ export function ProjectionChart({ data, category }: ProjectionChartProps) {
       </CardHeader>
       <CardContent>
         <div className="h-[300px] w-full" style={{ minWidth: "100px" }}>
-          <ResponsiveContainer width="100%" height={300}>
+          <ResponsiveContainer width="100%" height={300} minHeight={0}>
             <LineChart
               data={data}
               margin={{
