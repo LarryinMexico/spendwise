@@ -59,7 +59,7 @@ export default function InterceptorPage() {
                 Ask Me
               </CardTitle>
               <CardDescription>
-                e.g., 'I want to buy an iPhone 16' or 'Trip to Japan'
+                e.g., &apos;I want to buy an iPhone 16&apos; or &apos;Trip to Japan&apos;
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">

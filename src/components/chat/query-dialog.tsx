@@ -117,7 +117,7 @@ export function QueryDialog({ children }: { children: React.ReactNode }) {
               <div className="text-center text-muted-foreground text-sm py-8">
                 <p>Ask me anything about your spending</p>
                 <p className="mt-2 text-xs">
-                  e.g., 'How much did I spend on restaurants last month?'
+                  e.g., &apos;How much did I spend on restaurants last month?&apos;
                 </p>
               </div>
             )}
