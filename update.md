@@ -1,3 +1,4 @@
-- 手機端優化
+- 手機端優化：live phone-fframe preview
 - prompt優化
 - 前端優化
+- prompt優化

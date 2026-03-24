@@ -1,0 +1,19 @@
+# Node and Build artifacts
+node_modules
+.next
+npm-debug.log*
+*.tsbuildinfo
+
+# Git
+.git
+.gitignore
+
+# Environment
+.env.local
+.env.*.local
+
+# System files
+.DS_Store
+
+# Docs
+README.md

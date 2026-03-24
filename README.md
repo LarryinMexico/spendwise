@@ -1,14 +1,14 @@
 # AI Finance Dashboard
 
-[Screenshot]
+**Live Demo: [https://spendwise-gilt.vercel.app/dashboard](https://spendwise-gilt.vercel.app/dashboard)**
 
-AI 驅動的個人理財儀表板，幫助你追蹤消費、AI 自動分類、以自然語言查詢財務數據。
+個人理財儀表板，幫助你追蹤消費、AI 自動分類、以自然語言查詢財務數據。
 
 ## 功能
 
 ### 1. CSV 上傳與解析
-- 支援玉山銀行、國泰世華、中國信託對帳單格式
-- 拖放上傳，自動偵測欄位（日期、說明、支出、存入）
+- **智慧欄位對應**：自動偵測並對應常見的欄位名稱，如「交易日期」、「摘要」、「支出」、「存入」，能相容多數銀行（如玉山、國泰、中信）的 CSV 格式。
+- 拖放上傳介面
 - 批次匯入，支援單次多筆交易
 - 上傳記錄管理，可檢視與刪除歷史批次
 
@@ -115,6 +115,26 @@ npm run dev
 2. 使用 `public/sample-transactions*.csv` 測試檔案
 3. 上傳後點擊「AI 分類」按鈕
 4. 等待分類完成後，查看「總覽」頁面
+
+## 使用 Docker 運行
+
+本專案支援使用 Docker 進行容器化部署，確保環境一致性。
+
+### 1. 建置 Docker Image
+
+```bash
+docker build -t spendwise-app .
+```
+
+### 2. 運行 Docker Container
+
+```bash
+docker run -p 3000:3000 \\
+  --env-file .env.local \\
+  spendwise-app
+```
+
+注意：`--env-file` 會將你本地的 `.env.local` 檔案中的所有環境變數傳入容器中。請確保該檔案已設定妥當。
 
 ## 部署到 Vercel
 
