@@ -23,10 +23,10 @@ export function AICategorizeButton() {
         toast.success(data.message);
         window.location.reload();
       } else {
-        toast.error(data.error || "分類失敗");
+        toast.error(data.error || "Categorize Failed");
       }
     } catch (e) {
-      toast.error("分類失敗");
+      toast.error("Categorize Failed");
     } finally {
       setIsLoading(false);
     }
@@ -35,7 +35,7 @@ export function AICategorizeButton() {
   return (
     <Button onClick={handleCategorize} disabled={isLoading} variant="outline">
       <Sparkles className={`mr-2 h-4 w-4 ${isLoading ? "animate-spin" : ""}`} />
-      {isLoading ? "AI 分類中..." : "AI 分類"}
+      {isLoading ? "AI Categorizing..." : "AI Categorize"}
     </Button>
   );
 }

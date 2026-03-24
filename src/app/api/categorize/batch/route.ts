@@ -28,7 +28,7 @@ export async function POST() {
 
     if (pendingTransactions.length === 0) {
       return NextResponse.json({
-        message: "沒有待分類的交易",
+        message: "No transactions pending categorization",
         count: 0,
       });
     }
@@ -48,13 +48,13 @@ export async function POST() {
     }
 
     return NextResponse.json({
-      message: `成功分類 ${results.size} 筆交易`,
+      message: `Successfully categorized ${results.size} Transactions`,
       count: results.size,
     });
   } catch (error) {
     console.error("Categorize error:", error);
     return NextResponse.json(
-      { error: "分類失敗", details: String(error) },
+      { error: "Categorize Failed", details: String(error) },
       { status: 500 }
     );
   }

@@ -25,8 +25,8 @@ export function MonthlyBarChart({ dateRange }: { dateRange?: { from?: Date; to?:
     return (
       <Card>
         <CardHeader>
-          <CardTitle>每月支出趨勢</CardTitle>
-          <CardDescription>過去 6 個月</CardDescription>
+          <CardTitle>Monthly Expense Trend</CardTitle>
+          <CardDescription>Last 6 Months</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px] bg-muted animate-pulse rounded" />
@@ -35,14 +35,30 @@ export function MonthlyBarChart({ dateRange }: { dateRange?: { from?: Date; to?:
     );
   }
 
+  if (data.length === 0) {
+    return (
+      <Card className="shadow-none border border-[#E5E5E5] bg-white rounded-md">
+        <CardHeader className="border-b border-[#E5E5E5] pb-3">
+          <CardTitle className="text-sm font-semibold text-[#111111] tracking-tight">Monthly Expense Trend</CardTitle>
+          <CardDescription className="text-xs text-[#666666]">Last 6 Months Expense Overview</CardDescription>
+        </CardHeader>
+        <CardContent className="pt-6">
+          <div className="h-[280px] flex items-center justify-center text-muted-foreground">
+            No data available
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
   return (
     <Card className="shadow-none border border-[#E5E5E5] bg-white rounded-md">
       <CardHeader className="border-b border-[#E5E5E5] pb-3">
-        <CardTitle className="text-sm font-semibold text-[#111111] tracking-tight">每月支出趨勢</CardTitle>
-        <CardDescription className="text-xs text-[#666666]">過去六個月支出對帳狀況</CardDescription>
+        <CardTitle className="text-sm font-semibold text-[#111111] tracking-tight">Monthly Expense Trend</CardTitle>
+        <CardDescription className="text-xs text-[#666666]">Last 6 Months Expense Overview</CardDescription>
       </CardHeader>
       <CardContent className="pt-6">
-        <div className="h-[280px]">
+        <div className="h-[280px] w-full">
           <ResponsiveContainer width="100%" height="100%" minHeight={0}>
             <BarChart data={data} margin={{ top: 15, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
@@ -68,13 +84,13 @@ export function MonthlyBarChart({ dateRange }: { dateRange?: { from?: Date; to?:
                 }}
                 labelStyle={{ fontSize: "11px", fontWeight: 600, color: "#111111" }}
                 itemStyle={{ fontSize: "11px", color: "#666666" }}
-                formatter={(value: any) => [`$${value.toLocaleString()}`, "支出"]}
+                formatter={(value: any) => [`$${value.toLocaleString()}`, "Expense"]}
               />
               <Bar
                 dataKey="expense"
                 fill="#111111"
                 radius={[4, 4, 0, 0]}
-                name="支出"
+                name="Expense"
               />
             </BarChart>
           </ResponsiveContainer>

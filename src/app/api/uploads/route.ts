@@ -22,7 +22,7 @@ export async function GET() {
     return NextResponse.json({ uploads: uploadsList });
   } catch (error) {
     console.error("Get uploads error:", error);
-    return NextResponse.json({ error: "取得上傳記錄失敗" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch upload history" }, { status: 500 });
   }
 }
 
@@ -36,7 +36,7 @@ export async function DELETE(request: NextRequest) {
     const { uploadId } = await request.json();
 
     if (!uploadId) {
-      return NextResponse.json({ error: "缺少上傳 ID" }, { status: 400 });
+      return NextResponse.json({ error: "Missing Upload ID" }, { status: 400 });
     }
 
     await withUserDb(userId, async (db) => {
@@ -49,9 +49,9 @@ export async function DELETE(request: NextRequest) {
         .where(eq(uploads.id, uploadId));
     });
 
-    return NextResponse.json({ success: true, message: "已刪除上傳記錄及關聯交易" });
+    return NextResponse.json({ success: true, message: "Deleted upload history and associated transactions" });
   } catch (error) {
     console.error("Delete upload error:", error);
-    return NextResponse.json({ error: "刪除失敗" }, { status: 500 });
+    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }

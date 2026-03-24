@@ -34,7 +34,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ transactions: results });
   } catch (error) {
     console.error("Get transactions error:", error);
-    return NextResponse.json({ error: "取得交易失敗" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to get transactions" }, { status: 500 });
   }
 }
 
@@ -71,7 +71,7 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ transaction: newTransaction });
   } catch (error) {
     console.error("Create transaction error:", error);
-    return NextResponse.json({ error: "建立交易失敗" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to create transactions" }, { status: 500 });
   }
 }
 
@@ -86,9 +86,9 @@ export async function DELETE(_request: NextRequest) {
       db.delete(transactions).where(eq(transactions.clerkUserId, userId))
     );
 
-    return NextResponse.json({ success: true, message: "已刪除所有記錄" });
+    return NextResponse.json({ success: true, message: "All records deleted" });
   } catch (error) {
     console.error("Delete error:", error);
-    return NextResponse.json({ error: "刪除失敗" }, { status: 500 });
+    return NextResponse.json({ error: "Delete failed" }, { status: 500 });
   }
 }

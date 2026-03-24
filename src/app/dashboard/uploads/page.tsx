@@ -67,14 +67,14 @@ function UploadCard({
           </Button>
         </div>
         <CardDescription className="text-xs">
-          上傳時間：{formatDateTime(upload.createdAt)}
+          Upload Time：{formatDateTime(upload.createdAt)}
         </CardDescription>
       </CardHeader>
       <CardContent>
         <div className="flex gap-4 text-sm text-muted-foreground">
           <div className="flex items-center gap-1">
             <Hash className="h-4 w-4" />
-            <span>{upload.transactionCount} 筆交易</span>
+            <span>{upload.transactionCount} Transactions</span>
           </div>
           <div className="flex items-center gap-1">
             <Calendar className="h-4 w-4" />
@@ -103,8 +103,8 @@ export default function UploadsPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">上傳記錄</h1>
-        <p className="text-muted-foreground">管理你的 CSV 匯入記錄</p>
+        <h1 className="text-3xl font-bold tracking-tight">Upload History</h1>
+        <p className="text-muted-foreground">Manage your CSV import history</p>
       </div>
 
       {loading ? (
@@ -121,9 +121,9 @@ export default function UploadsPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <FileText className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-            <p className="text-muted-foreground">尚無上傳記錄</p>
+            <p className="text-muted-foreground">No upload history</p>
             <p className="text-sm text-muted-foreground mt-1">
-              前往「上傳」頁面匯入 CSV 檔案
+              Go to Upload page to import CSV files
             </p>
           </CardContent>
         </Card>

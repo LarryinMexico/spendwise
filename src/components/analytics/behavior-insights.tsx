@@ -47,7 +47,7 @@ export function BehaviorInsights() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5" />
-            行為洞察
+            Behavior Insights
           </CardTitle>
         </CardHeader>
         <CardContent>
@@ -67,11 +67,11 @@ export function BehaviorInsights() {
         <CardHeader>
           <CardTitle className="flex items-center gap-2">
             <Lightbulb className="h-5 w-5" />
-            行為洞察
+            Behavior Insights
           </CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">尚無足夠資料进行分析</p>
+          <p className="text-muted-foreground">Not enough data for analysis</p>
         </CardContent>
       </Card>
     );
@@ -82,7 +82,7 @@ export function BehaviorInsights() {
       <CardHeader>
         <CardTitle className="flex items-center gap-2">
           <Lightbulb className="h-5 w-5" />
-          行為洞察
+          Behavior Insights
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-6">
@@ -98,7 +98,7 @@ export function BehaviorInsights() {
 
         {insights.weeklyPatterns.length > 0 && (
           <div>
-            <h4 className="font-medium mb-2 text-sm">每週消費模式</h4>
+            <h4 className="font-medium mb-2 text-sm">Weekly Spending Pattern</h4>
             <div className="space-y-2">
               {insights.weeklyPatterns.slice(0, 3).map((pattern) => (
                 <WeeklyPatternCard key={pattern.dayOfWeek} pattern={pattern} />
@@ -111,7 +111,7 @@ export function BehaviorInsights() {
           <div>
             <h4 className="font-medium mb-2 text-sm flex items-center gap-2">
               <AlertTriangle className="h-4 w-4 text-yellow-500" />
-              異常交易
+              Abnormal Transactions
             </h4>
             <div className="space-y-1">
               {insights.anomalies.transactions.slice(0, 3).map((tx) => (

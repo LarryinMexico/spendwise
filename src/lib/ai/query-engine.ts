@@ -27,12 +27,12 @@ async function getDataContext(userId: string): Promise<string> {
     `);
 
     if (rows.length === 0) {
-      return "【資料庫目前沒有任何交易記錄。使用者尚未上傳資料。】";
+      return "【資料庫目前沒有任何Transactions記錄。使用者尚未Upload Data。】";
     }
 
     const lines = rows.map(
       (r) =>
-        `  ${r.month}: ${r.count} 筆，支出合計 NT$${r.expense_total}，收入合計 NT$${r.income_total}`
+        `  ${r.month}: ${r.count} ，Expense合計 NT$${r.expense_total}，Income合計 NT$${r.income_total}`
     );
     return `【使用者實際有資料的月份】\n${lines.join("\n")}`;
   } catch {
@@ -44,20 +44,20 @@ const SCHEMA = `
 表格: transactions（PostgreSQL）
 欄位:
 - clerk_user_id TEXT  → 使用者 ID，必須過濾
-- original_date DATE  → 交易日期 YYYY-MM-DD
-- original_description TEXT → 交易說明
-- original_amount NUMERIC → 原始金額（支出為正數）
-- normalized_amount NUMERIC → 標準化金額（永遠為正數）
-- transaction_type TEXT → 'expense'(支出) 或 'income'(收入)
+- original_date DATE  → TransactionsDate YYYY-MM-DD
+- original_description TEXT → TransactionsDescription
+- original_amount NUMERIC → 原始Amount（Expense為正數）
+- normalized_amount NUMERIC → 標準化Amount（永遠為正數）
+- transaction_type TEXT → 'expense'(Expense) 或 'income'(Income)
 - ai_category TEXT → AI分類（如：餐飲、交通、購物 等）
 
-金額計算規則:
-- 支出總額: COALESCE(SUM(normalized_amount::numeric), 0) WHERE transaction_type = 'expense'
-- 收入總額: COALESCE(SUM(normalized_amount::numeric), 0) WHERE transaction_type = 'income'
+Amount計算規則:
+- Expense總額: COALESCE(SUM(normalized_amount::numeric), 0) WHERE transaction_type = 'expense'
+- Income總額: COALESCE(SUM(normalized_amount::numeric), 0) WHERE transaction_type = 'income'
 
-日期範例:
+Date範例:
 - 本月: original_date >= DATE_TRUNC('month', CURRENT_DATE)
-- 上個月: original_date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND original_date < DATE_TRUNC('month', CURRENT_DATE)
+- 上Months: original_date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND original_date < DATE_TRUNC('month', CURRENT_DATE)
 - 完整一年: original_date >= DATE_TRUNC('year', CURRENT_DATE)
 `;
 
@@ -69,10 +69,10 @@ export async function askAI(
   const dataContext = await getDataContext(userId);
 
   // If no data at all, return early with helpful message
-  if (dataContext.includes("尚未上傳")) {
+  if (dataContext.includes("尚未Upload")) {
     return {
       success: true,
-      answer: "您的資料庫目前還沒有任何交易記錄。請先到「上傳對帳單」頁面上傳 CSV 檔案，就可以開始查詢了！",
+      answer: "您的資料庫目前還沒有任何Transactions記錄。請先到「Upload對帳單」頁面Upload CSV 檔案，就可以開始查詢了！",
       rowCount: 0,
     };
   }
@@ -89,9 +89,9 @@ ${dataContext}
 使用者問題: ${question}
 
 重要: 請根據上方【使用者實際有資料的月份】來決定要查詢哪個時間範圍。
-例如使用者問「上個月」但資料只有本月，則查本月並在回覆中說明。
+例如使用者問「上Months」但資料只有本月，則查本月並在回覆中Description。
 
-只回傳純 JSON，不要加任何說明文字:
+只回傳純 JSON，不要加任何Description文字:
 {"sql": "SELECT ..."}`;
 
   let generatedSQL = "";
@@ -147,14 +147,14 @@ ${dataContext}
 
 ${dataContext}
 
-SQL 查詢結果（共 ${rows.length} 筆）:
+SQL 查詢結果（Total ${rows.length} ）:
 ${JSON.stringify(dataPreview, null, 2)}
 
 請用繁體中文直接回答問題，規則：
-- 直接給出關鍵數字（金額、筆數等），不要描述 SQL 過程
-- 金額格式: NT$X,XXX（千分位逗號，2位小數如需要）
-- 若查詢結果為 0 但資料庫有其他月份的記錄，請說明使用者詢問的月份沒有資料，並提示可以查有資料的月份
-- 若 ai_category 顯示為 null，說明記錄尚未被 AI 分類
+- 直接給出關鍵數字（Amount、數等），不要描述 SQL 過程
+- Amount格式: NT$X,XXX（千分位逗號，2位小數如需要）
+- 若查詢結果為 0 但資料庫有Others月份的記錄，請Description使用者詢問的月份沒有資料，並提示可以查有資料的月份
+- 若 ai_category 顯示為 null，Description記錄尚未被 AI Categorize
 - 回答簡潔，最多 4 句`;
 
   try {
@@ -166,7 +166,7 @@ ${JSON.stringify(dataPreview, null, 2)}
     return { success: true, answer: text, sql: generatedSQL, rowCount: rows.length };
   } catch {
     const summary = rows.length > 0
-      ? `查詢到 ${rows.length} 筆：\n${JSON.stringify(dataPreview, null, 2)}`
+      ? `查詢到 ${rows.length} ：\n${JSON.stringify(dataPreview, null, 2)}`
       : "沒有找到符合條件的資料";
     return { success: true, answer: summary, sql: generatedSQL, rowCount: rows.length };
   }

@@ -25,12 +25,12 @@ export async function GET(request: NextRequest) {
     const results = await withUserDb(userId, async (db) =>
       db
         .select({
-          category: sql<string>`COALESCE(ai_category, '未分類')`,
+          category: sql<string>`COALESCE(ai_category, 'Uncategorized')`,
           total: sql<string>`COALESCE(SUM(normalized_amount::numeric), 0)`,
         })
         .from(transactions)
         .where(and(...conditions))
-        .groupBy(sql`COALESCE(ai_category, '未分類')`)
+        .groupBy(sql`COALESCE(ai_category, 'Uncategorized')`)
         .orderBy(sql`SUM(normalized_amount::numeric) DESC`)
     );
 
@@ -44,6 +44,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data });
   } catch (error) {
     console.error("Category breakdown error:", error);
-    return NextResponse.json({ error: "取得分類失敗" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to get category breakdown" }, { status: 500 });
   }
 }

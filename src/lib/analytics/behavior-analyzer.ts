@@ -37,13 +37,13 @@ export interface BehaviorInsights {
 
 export function analyzeWeeklyPatterns(transactions: Transaction[]): WeeklyPattern[] {
   const dayMap: Record<number, { zh: string; patterns: Transaction[] }> = {
-    0: { zh: "週日", patterns: [] },
-    1: { zh: "週一", patterns: [] },
-    2: { zh: "週二", patterns: [] },
-    3: { zh: "週三", patterns: [] },
-    4: { zh: "週四", patterns: [] },
-    5: { zh: "週五", patterns: [] },
-    6: { zh: "週六", patterns: [] },
+    0: { zh: "Sun", patterns: [] },
+    1: { zh: "Mon", patterns: [] },
+    2: { zh: "Tue", patterns: [] },
+    3: { zh: "Wed", patterns: [] },
+    4: { zh: "Thu", patterns: [] },
+    5: { zh: "Fri", patterns: [] },
+    6: { zh: "Sat", patterns: [] },
   };
 
   transactions
@@ -137,7 +137,7 @@ export function analyzeCategorySpending(
   transactions
     .filter((t) => t.transactionType === "expense")
     .forEach((t) => {
-      const cat = t.aiCategory || "未分類";
+      const cat = t.aiCategory || "Uncategorized";
       if (!categoryMap[cat]) {
         categoryMap[cat] = { total: 0, count: 0 };
       }
@@ -159,7 +159,7 @@ export function generateInsights(data: BehaviorInsights): string[] {
 
   if (data.topSpendDay && data.topSpendDay.percentAboveAverage > 20) {
     insights.push(
-      `你的消費集中在${data.topSpendDay.dayOfWeekZh}，比其他天高 ${Math.round(data.topSpendDay.percentAboveAverage)}%`
+      `Your spending is concentrated on ${data.topSpendDay.dayOfWeekZh}, higher than other days by ${Math.round(data.topSpendDay.percentAboveAverage)}%`
     );
   }
 
@@ -169,14 +169,14 @@ export function generateInsights(data: BehaviorInsights): string[] {
       0
     );
     insights.push(
-      `本月有 ${data.anomalies.transactions.length} 筆異常支出，合計 $${Math.round(total).toLocaleString()}`
+      `This month has ${data.anomalies.transactions.length} abnormal transactions, totaling $${Math.round(total).toLocaleString()}`
     );
   }
 
   const trendMessages = {
-    increasing: "過去幾個月支出呈上升趨勢，建議注意控制預算",
-    decreasing: "過去幾個月支出有下降趨勢，做得很好！",
-    stable: "過去幾個月支出趨於穩定",
+    increasing: "Upward trend in expenses over recent months. Budget control advised.",
+    decreasing: "Downward trend in expenses over recent months. Good job!",
+    stable: "Expense trend forms a stable pattern over recent months.",
   };
   insights.push(trendMessages[data.trend.direction]);
 

@@ -59,7 +59,7 @@ export function QueryDialog({ children }: { children: React.ReactNode }) {
           body: JSON.stringify({ question: userMessage.content }),
         });
 
-        if (!res.ok) throw new Error("查詢失敗");
+        if (!res.ok) throw new Error("Query failed");
 
         const reader = res.body?.getReader();
         if (!reader) throw new Error("No reader");
@@ -93,7 +93,7 @@ export function QueryDialog({ children }: { children: React.ReactNode }) {
         const errorMessage: Message = {
           id: (Date.now() + 1).toString(),
           role: "assistant",
-          content: "抱歉，發生錯誤，請稍後再試。",
+          content: "Sorry, an error occurred. Please try again.",
         };
         setMessages((prev) => [...prev, errorMessage]);
       } finally {
@@ -108,16 +108,16 @@ export function QueryDialog({ children }: { children: React.ReactNode }) {
       <DialogTrigger render={children as React.ReactElement} />
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>AI 查詢</DialogTitle>
+          <DialogTitle>AI Query</DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col h-[400px]">
           <div className="flex-1 overflow-y-auto space-y-4 mb-4">
             {messages.length === 0 && (
               <div className="text-center text-muted-foreground text-sm py-8">
-                <p>問我任何關於你的消費記錄的問題</p>
+                <p>Ask me anything about your spending</p>
                 <p className="mt-2 text-xs">
-                  例如：「我上個月餐廳花了多少？」
+                  e.g., 'How much did I spend on restaurants last month?'
                 </p>
               </div>
             )}
@@ -140,7 +140,7 @@ export function QueryDialog({ children }: { children: React.ReactNode }) {
             {isLoading && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Loader2 className="h-4 w-4 animate-spin" />
-                AI 分析中...
+                AI Analyzing...
               </div>
             )}
           </div>
@@ -152,7 +152,7 @@ export function QueryDialog({ children }: { children: React.ReactNode }) {
               ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
-              placeholder="輸入你的問題..."
+              placeholder="Type your question..."
               disabled={isLoading}
               className="flex-1"
             />

@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const question = (body.question || "").trim();
 
     if (!question) {
-      return NextResponse.json({ error: "問題不能為空" }, { status: 400 });
+      return NextResponse.json({ error: "Question cannot be empty" }, { status: 400 });
     }
 
     const result = await askAI(question, userId);
@@ -36,6 +36,6 @@ export async function POST(request: NextRequest) {
     });
   } catch (error) {
     console.error("Query route error:", error);
-    return NextResponse.json({ error: "查詢失敗" }, { status: 500 });
+    return NextResponse.json({ error: "Query failed" }, { status: 500 });
   }
 }

@@ -36,13 +36,13 @@ export function ProjectionChart({ data, category }: ProjectionChartProps) {
     return (
       <Card className="col-span-1 lg:col-span-2">
         <CardHeader>
-          <CardTitle>支出預測</CardTitle>
+          <CardTitle>Expense Projection</CardTitle>
           <CardDescription>
-            選擇類別並調整支出以查看預測
+            Select a category and adjust expense to see projections
           </CardDescription>
         </CardHeader>
         <CardContent className="h-[300px] flex items-center justify-center text-muted-foreground">
-          尚無可用數據
+          No data available
         </CardContent>
       </Card>
     );
@@ -51,9 +51,9 @@ export function ProjectionChart({ data, category }: ProjectionChartProps) {
   return (
     <Card className="col-span-1 lg:col-span-2">
       <CardHeader>
-        <CardTitle>支出預測：{category}</CardTitle>
+        <CardTitle>Expense Projection：{category}</CardTitle>
         <CardDescription>
-          估計未來 12 個月的累積支出
+          Estimated cumulative expense for the next 12 months
         </CardDescription>
       </CardHeader>
       <CardContent>
@@ -96,7 +96,7 @@ export function ProjectionChart({ data, category }: ProjectionChartProps) {
               <Line
                 type="monotone"
                 dataKey="current"
-                name="目前趨勢"
+                name="Current Trend"
                 stroke="#64748b"
                 strokeWidth={3}
                 dot={{ r: 4, stroke: "#64748b", fill: "#fff" }}
@@ -105,7 +105,7 @@ export function ProjectionChart({ data, category }: ProjectionChartProps) {
               <Line
                 type="monotone"
                 dataKey="adjusted"
-                name="調整後趨勢"
+                name="Adjusted Trend"
                 stroke="#f59e0b"
                 strokeWidth={3}
                 dot={{ r: 5, stroke: "#f59e0b", fill: "#fff" }}

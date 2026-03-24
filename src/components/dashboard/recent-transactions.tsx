@@ -40,8 +40,8 @@ export function RecentTransactions() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>最近交易</CardTitle>
-          <CardDescription>載入中...</CardDescription>
+          <CardTitle>Recent Transactions</CardTitle>
+          <CardDescription>Loading...</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="space-y-2">
@@ -58,12 +58,12 @@ export function RecentTransactions() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle>最近交易</CardTitle>
-          <CardDescription>尚無交易記錄</CardDescription>
+          <CardTitle>Recent Transactions</CardTitle>
+          <CardDescription>No transactions found</CardDescription>
         </CardHeader>
         <CardContent>
           <p className="text-sm text-muted-foreground">
-            請先上傳銀行對帳單來開始追蹤你的財務狀況
+            Upload bank statement to start tracking
           </p>
         </CardContent>
       </Card>
@@ -73,17 +73,17 @@ export function RecentTransactions() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle>最近交易</CardTitle>
-        <CardDescription>最新 10 筆交易記錄</CardDescription>
+        <CardTitle>Recent Transactions</CardTitle>
+        <CardDescription>Latest 10 Transactions</CardDescription>
       </CardHeader>
       <CardContent>
         <Table>
           <TableHeader>
             <TableRow>
-              <TableHead>日期</TableHead>
-              <TableHead>摘要</TableHead>
-              <TableHead>類別</TableHead>
-              <TableHead className="text-right">金額</TableHead>
+              <TableHead>Date</TableHead>
+              <TableHead>Description</TableHead>
+              <TableHead>Category</TableHead>
+              <TableHead className="text-right">Amount</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -99,7 +99,7 @@ export function RecentTransactions() {
                   {tx.aiCategory ? (
                     <Badge variant="secondary">{tx.aiCategory}</Badge>
                   ) : (
-                    <Badge variant="outline">未分類</Badge>
+                    <Badge variant="outline">Uncategorized</Badge>
                   )}
                 </TableCell>
                 <TableCell

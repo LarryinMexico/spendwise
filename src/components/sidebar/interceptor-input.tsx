@@ -48,7 +48,7 @@ export function InterceptorInput() {
       reader.read().then(processChunk);
     } catch (e) {
       console.error("Interceptor error:", e);
-      setResponse("分析失敗，請稍後再試。");
+      setResponse("Analytics failed, please try again.");
       setIsLoading(false);
     }
   };
@@ -64,12 +64,12 @@ export function InterceptorInput() {
     <div className="border-t p-4 space-y-3">
       <div className="flex items-center gap-2 text-sm font-medium">
         <Lightbulb className="h-4 w-4 text-primary" />
-        <span>消費決策助手</span>
+        <span>Decision Maker</span>
       </div>
 
       <div className="relative">
         <Textarea
-          placeholder="我想買..."
+          placeholder="I want to buy..."
           value={question}
           onChange={(e) => setQuestion(e.target.value)}
           onKeyDown={handleKeyDown}

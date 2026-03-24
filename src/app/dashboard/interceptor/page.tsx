@@ -1,111 +1,29 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2, Lightbulb, Sparkles, TrendingDown, TrendingUp, AlertCircle } from "lucide-react";
-
-interface Transaction {
-  originalDate: string;
-  transactionType: "income" | "expense";
-  normalizedAmount?: string;
-  originalAmount?: string;
-}
+import { useMonthlySummary } from "@/hooks/use-transactions";
+import { useAIStream } from "@/hooks/use-ai-stream";
 
 export default function InterceptorPage() {
   const [question, setQuestion] = useState("");
-  const [response, setResponse] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-  const [financialData, setFinancialData] = useState<{
-    monthlyIncome: number;
-    monthlyExpense: number;
-    balance: number;
-  } | null>(null);
 
-  useEffect(() => {
-    async function fetchFinancialData() {
-      try {
-        const res = await fetch("/api/transactions?limit=1000");
-        if (!res.ok) return;
-        const { transactions } = await res.json();
-
-        if (!transactions || transactions.length === 0) return;
-
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        const pad = (n: number) => n.toString().padStart(2, "0");
-        const startOfMonth = `${year}-${pad(month + 1)}-01`;
-        const lastDay = new Date(year, month + 1, 0).getDate();
-        const endOfMonth = `${year}-${pad(month + 1)}-${pad(lastDay)}`;
-
-        const monthlyTxs = transactions.filter((t: Transaction) => {
-          const date = t.originalDate;
-          return date >= startOfMonth && date <= endOfMonth;
-        });
-
-        const income = monthlyTxs
-          .filter((t: Transaction) => t.transactionType === "income")
-          .reduce((sum: number, t: Transaction) => sum + parseFloat(t.normalizedAmount || t.originalAmount || "0"), 0);
-
-        const expense = monthlyTxs
-          .filter((t: Transaction) => t.transactionType === "expense")
-          .reduce((sum: number, t: Transaction) => sum + Math.abs(parseFloat(t.normalizedAmount || t.originalAmount || "0")), 0);
-
-        setFinancialData({
-          monthlyIncome: income,
-          monthlyExpense: Math.abs(expense),
-          balance: income - Math.abs(expense),
-        });
-      } catch {
-        // ignore
-      }
-    }
-
-    fetchFinancialData();
+  const currentMonthRange = useMemo(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return { from: start, to: end };
   }, []);
 
+  const { summary, loading: summaryLoading } = useMonthlySummary(currentMonthRange);
+  const { response, isStreaming, streamRequest } = useAIStream("/api/interceptor");
+
   const handleSubmit = async () => {
-    if (!question.trim() || isLoading) return;
-
-    setIsLoading(true);
-    setResponse("");
-
-    try {
-      const res = await fetch("/api/interceptor", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ question: question.trim() }),
-      });
-
-      if (!res.ok) throw new Error("API error");
-
-      const body = res.body;
-      if (!body) throw new Error("No response body");
-      const reader = body.getReader();
-
-      const decoder = new TextDecoder();
-      let buffer = "";
-
-      function processChunk({ done, value }: ReadableStreamReadResult<Uint8Array>) {
-        if (done) {
-          setIsLoading(false);
-          return;
-        }
-
-        buffer += decoder.decode(value, { stream: true });
-        setResponse(buffer);
-
-        reader.read().then(processChunk);
-      }
-
-      reader.read().then(processChunk);
-    } catch (e) {
-      console.error("Interceptor error:", e);
-      setResponse("分析失敗，請稍後再試。");
-      setIsLoading(false);
-    }
+    if (!question.trim() || isStreaming) return;
+    streamRequest({ question: question.trim() });
   };
 
   const handleKeyDown = (e: React.KeyboardEvent) => {
@@ -126,9 +44,9 @@ export default function InterceptorPage() {
   return (
     <div className="p-6 space-y-6">
       <div>
-        <h1 className="text-3xl font-bold tracking-tight">消費決策助手</h1>
+        <h1 className="text-3xl font-bold tracking-tight">Decision Maker</h1>
         <p className="text-muted-foreground">
-          輸入你想購買的東西，AI 會根據你的財務狀況提供建議
+          Type what you want to buy, AI will advise based on your finances
         </p>
       </div>
 
@@ -138,16 +56,16 @@ export default function InterceptorPage() {
             <CardHeader>
               <CardTitle className="flex items-center gap-2">
                 <Lightbulb className="h-5 w-5 text-primary" />
-                詢問我
+                Ask Me
               </CardTitle>
               <CardDescription>
-                例如：「我想買一台 iPhone 16」或「我想去日本旅遊」
+                e.g., 'I want to buy an iPhone 16' or 'Trip to Japan'
               </CardDescription>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="relative">
                 <Textarea
-                  placeholder="我想買..."
+                  placeholder="I want to buy..."
                   value={question}
                   onChange={(e) => setQuestion(e.target.value)}
                   onKeyDown={handleKeyDown}
@@ -159,9 +77,9 @@ export default function InterceptorPage() {
                   variant="ghost"
                   className="absolute right-2 bottom-2 h-8 w-8"
                   onClick={handleSubmit}
-                  disabled={isLoading || !question.trim()}
+                  disabled={isStreaming || !question.trim()}
                 >
-                  {isLoading ? (
+                  {isStreaming ? (
                     <Loader2 className="h-4 w-4 animate-spin" />
                   ) : (
                     <Send className="h-4 w-4" />
@@ -188,34 +106,34 @@ export default function InterceptorPage() {
         <div className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">本月財務概況</CardTitle>
+              <CardTitle className="text-base">Monthly Financial Overview</CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <TrendingUp className="h-4 w-4 text-green-500" />
-                  <span>收入</span>
+                  <span>Income</span>
                 </div>
                 <span className="font-medium text-green-600">
-                  {financialData ? formatCurrency(financialData.monthlyIncome) : "-"}
+                  {summaryLoading ? "-" : formatCurrency(summary.income)}
                 </span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <TrendingDown className="h-4 w-4 text-red-500" />
-                  <span>支出</span>
+                  <span>Expense</span>
                 </div>
                 <span className="font-medium text-red-600">
-                  {financialData ? formatCurrency(financialData.monthlyExpense) : "-"}
+                  {summaryLoading ? "-" : formatCurrency(summary.expense)}
                 </span>
               </div>
               <div className="border-t pt-3 flex items-center justify-between">
                 <div className="flex items-center gap-2 text-sm text-muted-foreground">
                   <AlertCircle className="h-4 w-4" />
-                  <span>餘額</span>
+                  <span>Balance</span>
                 </div>
-                <span className={`font-bold ${financialData && financialData.balance >= 0 ? "text-green-600" : "text-red-600"}`}>
-                  {financialData ? formatCurrency(financialData.balance) : "-"}
+                <span className={`font-bold ${summary.balance >= 0 ? "text-green-600" : "text-red-600"}`}>
+                  {summaryLoading ? "-" : formatCurrency(summary.balance)}
                 </span>
               </div>
             </CardContent>
@@ -223,18 +141,21 @@ export default function InterceptorPage() {
 
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">常見問題</CardTitle>
+              <CardTitle className="text-base">FAQ</CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
               {[
-                "我想買 iPhone 16",
-                "我想去日本旅遊",
-                "我想買一台摩托車",
-                "我想報名補習班",
+                "I want to buy an iPhone 16",
+                "I want to go to Japan",
+                "I want to buy a motorcycle",
+                "I want to join a course",
               ].map((q) => (
                 <button
                   key={q}
-                  onClick={() => setQuestion(q)}
+                  onClick={() => {
+                    setQuestion(q);
+                    streamRequest({ question: q });
+                  }}
                   className="w-full text-left px-3 py-2 text-sm rounded-md bg-muted/50 hover:bg-muted transition-colors text-muted-foreground hover:text-foreground"
                 >
                   {q}

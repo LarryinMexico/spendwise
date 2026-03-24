@@ -30,11 +30,6 @@ export function useMonthlyTrend(dateRange?: { from?: Date; to?: Date }) {
 
   useEffect(() => {
     async function fetchData() {
-      if (!dateRange?.from || !dateRange?.to) {
-        setLoading(false);
-        setData([]);
-        return;
-      }
       setLoading(true);
       try {
         const url = buildUrl("/api/analytics/monthly-trend", dateRange);
@@ -62,11 +57,6 @@ export function useCategoryBreakdown(dateRange?: { from?: Date; to?: Date }) {
 
   useEffect(() => {
     async function fetchData() {
-      if (!dateRange?.from || !dateRange?.to) {
-        setLoading(false);
-        setData([]);
-        return;
-      }
       setLoading(true);
       try {
         const url = buildUrl("/api/analytics/category-breakdown", dateRange);

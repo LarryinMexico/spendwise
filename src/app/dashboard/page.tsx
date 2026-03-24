@@ -6,9 +6,17 @@ import { MonthlySummary } from "@/components/dashboard/monthly-summary";
 import { RecentTransactions } from "@/components/dashboard/recent-transactions";
 import { AICategorizeButton } from "@/components/dashboard/ai-categorize-button";
 import { QueryDialog } from "@/components/chat/query-dialog";
-import { CategoryPieChart } from "@/components/charts/category-pie-chart";
-import { MonthlyBarChart } from "@/components/charts/monthly-bar-chart";
 import { DataStats } from "@/components/dashboard/data-stats";
+import dynamic from "next/dynamic";
+
+const CategoryPieChart = dynamic(
+  () => import("@/components/charts/category-pie-chart").then((mod) => mod.CategoryPieChart),
+  { ssr: false, loading: () => <div className="h-[350px] w-full rounded-xl bg-muted/40 animate-pulse border border-border" /> }
+);
+const MonthlyBarChart = dynamic(
+  () => import("@/components/charts/monthly-bar-chart").then((mod) => mod.MonthlyBarChart),
+  { ssr: false, loading: () => <div className="h-[350px] w-full rounded-xl bg-muted/40 animate-pulse border border-border" /> }
+);
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Upload, MessageSquare } from "lucide-react";
@@ -20,8 +28,8 @@ export default function DashboardPage() {
     <div className="p-6 space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold tracking-tight">儀表板</h1>
-          <p className="text-muted-foreground">查看你的財務概況</p>
+          <h1 className="text-3xl font-bold tracking-tight">Dashboard</h1>
+          <p className="text-muted-foreground">View your financial overview</p>
         </div>
         <div className="flex items-center gap-2">
           <DateRangePicker
@@ -34,7 +42,7 @@ export default function DashboardPage() {
           <Link href="/dashboard/upload">
             <Button className="bg-[#111111] hover:bg-[#222222] text-white shadow-none rounded-md">
               <Upload className="mr-2 h-4 w-4" />
-              上傳 CSV
+              Upload CSV
             </Button>
           </Link>
         </div>

@@ -43,6 +43,6 @@ export async function GET(request: NextRequest) {
     return NextResponse.json({ data });
   } catch (error) {
     console.error("Monthly trend error:", error);
-    return NextResponse.json({ error: "取得趨勢失敗" }, { status: 500 });
+    return NextResponse.json({ error: "Failed to fetch trends" }, { status: 500 });
   }
 }

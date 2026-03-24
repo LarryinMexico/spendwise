@@ -80,7 +80,7 @@ export function parseCSV(
               type,
             });
           } catch (e) {
-            errors.push(`列 ${i + 1}: 解析錯誤`);
+            errors.push(`列 ${i + 1}: 解析Error`);
           }
         }
 

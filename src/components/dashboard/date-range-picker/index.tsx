@@ -57,7 +57,7 @@ export function DateRangePicker({
               new Date(date.from).toLocaleDateString()
             )
           ) : (
-            <span>選擇日期</span>
+            <span>Pick a date</span>
           )}
         </Button>
       </PopoverTrigger>
@@ -68,17 +68,17 @@ export function DateRangePicker({
             onValueChange={(value) => setPreset(value as DateRangePreset)}
           >
             <SelectTrigger className="w-[180px]">
-              <SelectValue placeholder="選擇期間" />
+              <SelectValue placeholder="Select preset" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="thisMonth">本月</SelectItem>
-              <SelectItem value="lastMonth">上個月</SelectItem>
-              <SelectItem value="last3Months">最近三個月</SelectItem>
-              <SelectItem value="thisYear">今年</SelectItem>
+              <SelectItem value="thisMonth">This Month</SelectItem>
+              <SelectItem value="lastMonth">Last Month</SelectItem>
+              <SelectItem value="last3Months">Last 3 Months</SelectItem>
+              <SelectItem value="thisYear">This Year</SelectItem>
             </SelectContent>
           </Select>
           <Button onClick={() => setIsOpen(false)} variant="ghost">
-            確定
+            Done
           </Button>
         </div>
         <Calendar

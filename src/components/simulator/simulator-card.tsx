@@ -1,11 +1,13 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CategorySelector } from "./category-selector";
 import { AdjustmentSlider } from "./adjustment-slider";
 import { ProjectionChart } from "./projection-chart";
 import { SimulationResult } from "./simulation-result";
+import { useTransactions, useMonthlySummary } from "@/hooks/use-transactions";
+import { useAIStream } from "@/hooks/use-ai-stream";
 
 interface CategorySpending {
   category: string;
@@ -19,163 +21,104 @@ interface ProjectionData {
 }
 
 export function SimulatorCard() {
-  const [categories, setCategories] = useState<CategorySpending[]>([]);
   const [selectedCategory, setSelectedCategory] = useState<string>("");
   const [adjustment, setAdjustment] = useState<number>(0);
-  const [loading, setLoading] = useState(true);
-  const [explanation, setExplanation] = useState<string>("");
-  const [isStreaming, setIsStreaming] = useState(false);
 
-  // Financial summary state
-  const [monthlyIncome, setMonthlyIncome] = useState(0);
-  const [monthlyExpense, setMonthlyExpense] = useState(0);
-  const [currentBalance, setCurrentBalance] = useState(0);
-
-  useEffect(() => {
-    async function fetchData() {
-      try {
-        const res = await fetch("/api/transactions?limit=1000");
-        if (!res.ok) throw new Error("Failed to fetch transactions");
-        const { transactions } = await res.json();
-
-        const now = new Date();
-        const year = now.getFullYear();
-        const month = now.getMonth();
-        const pad = (n: number) => n.toString().padStart(2, "0");
-        const startOfMonth = `${year}-${pad(month + 1)}-01`;
-        const lastDay = new Date(year, month + 1, 0).getDate();
-        const endOfMonth = `${year}-${pad(month + 1)}-${pad(lastDay)}`;
-
-        const summaryRes = await fetch(
-          `/api/transactions?limit=1000&startDate=${startOfMonth}&endDate=${endOfMonth}`
-        );
-        if (summaryRes.ok) {
-          const { transactions: monthlyTxs } = await summaryRes.json();
-          // Support both snake_case (direct DB) and camelCase types
-          const income = monthlyTxs
-            .filter((t: any) => (t.transaction_type || t.transactionType) === "income")
-            .reduce((sum: number, t: any) => sum + parseFloat(t.normalized_amount || t.normalizedAmount || t.original_amount || t.originalAmount || "0"), 0);
-          const expense = monthlyTxs
-            .filter((t: any) => (t.transaction_type || t.transactionType) === "expense")
-            .reduce((sum: number, t: any) => sum + parseFloat(t.normalized_amount || t.normalizedAmount || t.original_amount || t.originalAmount || "0"), 0);
-          
-          setMonthlyIncome(income);
-          setMonthlyExpense(Math.abs(expense));
-          setCurrentBalance(income - Math.abs(expense));
-        }
-
-        // Calculate category spending
-        const categoryMap: Record<string, number> = {};
-        transactions
-          .filter((t: any) => (t.transaction_type || t.transactionType) === "expense")
-          .forEach((t: any) => {
-            const cat = t.ai_category || t.aiCategory || "未分類";
-            const amt = parseFloat(t.normalized_amount || t.normalizedAmount || t.original_amount || t.originalAmount || "0");
-            categoryMap[cat] = (categoryMap[cat] || 0) + Math.abs(amt);
-          });
-
-        const categoryList: CategorySpending[] = Object.entries(categoryMap)
-          .map(([category, total]) => ({ category, monthlyTotal: total / 3 })) // 假設 3 個月均值
-          .sort((a, b) => b.monthlyTotal - a.monthlyTotal);
-
-        setCategories(categoryList);
-        if (categoryList.length > 0) {
-          setSelectedCategory(categoryList[0].category);
-        }
-      } catch (e) {
-        console.error("Failed to fetch data:", e);
-      } finally {
-        setLoading(false);
-      }
-    }
-
-    fetchData();
+  // 1. Data Flow: Fetch transactions via SWR (deduped automatically globally)
+  const { transactions, loading } = useTransactions(1000);
+  
+  // Calculate this month's start/end correctly via local timezone
+  const currentMonthRange = useMemo(() => {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    return { from: start, to: end };
   }, []);
+
+  const { summary } = useMonthlySummary(currentMonthRange);
+  const { income: monthlyIncome, expense: monthlyExpense, balance: currentBalance } = summary;
+
+  // 2. Performance Baseline: useMemo for intensive data transformation
+  const categories = useMemo(() => {
+    if (!transactions) return [];
+    
+    const categoryMap: Record<string, number> = {};
+    transactions
+      .filter((t) => t.transactionType === "expense")
+      .forEach((t) => {
+        const cat = t.aiCategory || "Uncategorized";
+        const amt = parseFloat(t.normalizedAmount || t.originalAmount || "0");
+        categoryMap[cat] = (categoryMap[cat] || 0) + Math.abs(amt);
+      });
+
+    const categoryList: CategorySpending[] = Object.entries(categoryMap)
+      .map(([category, total]) => ({ category, monthlyTotal: total / 3 })) // Assuming 3 Months Average
+      .sort((a, b) => b.monthlyTotal - a.monthlyTotal);
+
+    return categoryList;
+  }, [transactions]);
+
+  // Set initial category when loaded
+  useEffect(() => {
+    if (categories.length > 0 && !selectedCategory) {
+      setSelectedCategory(categories[0].category);
+    }
+  }, [categories, selectedCategory]);
+
+  const selectedData = categories.find((c) => c.category === selectedCategory);
+  
+  const adjustedMonthly = useMemo(() => {
+    return selectedData ? selectedData.monthlyTotal * (1 + adjustment / 100) : 0;
+  }, [selectedData, adjustment]);
+
+  const monthlySavings = useMemo(() => {
+    return selectedData ? selectedData.monthlyTotal - adjustedMonthly : 0;
+  }, [selectedData, adjustedMonthly]);
 
   // Calculate projections
   const projections = useCallback((): ProjectionData[] => {
-    const selected = categories.find((c) => c.category === selectedCategory);
-    if (!selected) return [];
+    if (!selectedData) return [];
 
-    const months = ["1月", "3月", "6月", "9月", "12月"];
+    const months = ["Jan", "Mar", "Jun", "Sep", "Dec"];
     const monthValues = [1, 3, 6, 9, 12];
-    const baseSpending = selected.monthlyTotal;
-    const adjustedSpending = baseSpending * (1 + adjustment / 100);
+    const baseSpending = selectedData.monthlyTotal;
+    const adjustedSpending = adjustedMonthly;
 
     return months.map((month, i) => ({
       month,
       current: baseSpending * monthValues[i],
       adjusted: adjustedSpending * monthValues[i],
     }));
-  }, [categories, selectedCategory, adjustment]);
+  }, [selectedData, adjustedMonthly]);
 
-  const selectedData = categories.find((c) => c.category === selectedCategory);
-  const adjustedMonthly = selectedData
-    ? selectedData.monthlyTotal * (1 + adjustment / 100)
-    : 0;
-  const monthlySavings = selectedData
-    ? selectedData.monthlyTotal - adjustedMonthly
-    : 0;
+  // 4. Extensibility: Extracted AI Stream Hook
+  const { response: explanation, isStreaming, streamRequest, abortStream } = useAIStream("/api/simulator");
 
+  // Fire AI generation when adjustment stops (debounced conceptually by the user slider release, but triggered by effect)
   useEffect(() => {
     if (!selectedData || adjustment === 0) {
-      setExplanation("");
+      abortStream();
       return;
     }
 
-    setIsStreaming(true);
-    setExplanation("");
+    streamRequest({
+      category: selectedCategory,
+      adjustment,
+      currentMonthly: selectedData.monthlyTotal,
+      totalMonthlyExpense: monthlyExpense,
+      monthlyIncome,
+      currentBalance,
+    });
 
-    const controller = new AbortController();
-
-    fetch("/api/simulator", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        category: selectedCategory,
-        adjustment,
-        currentMonthly: selectedData.monthlyTotal,
-        totalMonthlyExpense: monthlyExpense,
-        monthlyIncome,
-        currentBalance,
-      }),
-      signal: controller.signal,
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("API error");
-        const body = res.body;
-        if (!body) throw new Error("No response body");
-        const reader = body.getReader();
-
-        const decoder = new TextDecoder();
-        let buffer = "";
-
-        function processChunk({ done, value }: ReadableStreamReadResult<Uint8Array>) {
-          if (done) return;
-          buffer += decoder.decode(value, { stream: true });
-          setExplanation((prev) => prev + buffer);
-          buffer = "";
-          reader.read().then(processChunk);
-        }
-
-        reader.read().then(processChunk);
-      })
-      .catch((e) => {
-        if (e.name !== "AbortError") console.error("Streaming error:", e);
-      })
-      .finally(() => {
-        setIsStreaming(false);
-      });
-
-    return () => controller.abort();
-  }, [selectedCategory, adjustment, selectedData, monthlyExpense, monthlyIncome, currentBalance]);
+    return () => abortStream();
+  }, [selectedCategory, adjustment, selectedData, monthlyExpense, monthlyIncome, currentBalance, streamRequest, abortStream]);
 
   return (
     <div className="grid gap-6 md:grid-cols-2">
       <Card>
         <CardHeader>
-          <CardTitle>消費模擬器</CardTitle>
-          <CardDescription>調整類別支出，預覽未來影響</CardDescription>
+          <CardTitle>Spending Simulator</CardTitle>
+          <CardDescription>Adjust category expense and preview long-term impact</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {loading ? (
@@ -184,7 +127,7 @@ export function SimulatorCard() {
               <div className="h-20 bg-muted animate-pulse rounded" />
             </div>
           ) : categories.length === 0 ? (
-            <p className="text-muted-foreground">尚無消費資料</p>
+            <p className="text-muted-foreground">No spending data</p>
           ) : (
             <>
               <CategorySelector
@@ -196,15 +139,15 @@ export function SimulatorCard() {
               {selectedData && (
                 <div className="p-4 rounded-lg bg-muted/50 space-y-2">
                   <div className="flex justify-between text-sm">
-                    <span>原始月支出</span>
+                    <span>Original Monthly Expense</span>
                     <span className="font-medium">${Math.round(selectedData.monthlyTotal).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
-                    <span>調整後月支出</span>
+                    <span>Adjusted Monthly Expense</span>
                     <span className="font-medium">${Math.round(adjustedMonthly).toLocaleString()}</span>
                   </div>
                   <div className="border-t pt-2 flex justify-between text-sm font-bold">
-                    <span>月節省</span>
+                    <span>Monthly Savings</span>
                     <span className={monthlySavings >= 0 ? "text-green-500" : "text-red-500"}>
                       ${Math.round(monthlySavings).toLocaleString()}
                     </span>

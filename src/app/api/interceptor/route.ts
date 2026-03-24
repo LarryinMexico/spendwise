@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { generateText } from "ai";
+import { streamText } from "ai";
 import { groq } from "@ai-sdk/groq";
 import { withUserDb } from "@/lib/db";
 import { sql } from "drizzle-orm";
@@ -17,7 +17,7 @@ export async function POST(request: NextRequest) {
     const { question } = await request.json();
 
     if (!question || question.trim().length === 0) {
-      return NextResponse.json({ error: "問題不能為空" }, { status: 400 });
+      return NextResponse.json({ error: "Question cannot be empty" }, { status: 400 });
     }
 
     // Get real financial data
@@ -55,7 +55,7 @@ export async function POST(request: NextRequest) {
         // Get category averages (last 3 months)
         const categoryRows = await tx.execute(sql.raw(`
           SELECT 
-            COALESCE(ai_category, '未分類') as category,
+            COALESCE(ai_category, 'Uncategorized') as category,
             AVG(normalized_amount::numeric) as avg_amount,
             COUNT(*) as count
           FROM transactions
@@ -94,28 +94,17 @@ Please analyze this purchase in English:
 
 Keep response professional, concise, and do not use any emojis. 2-3 paragraphs maximum.`;
 
-    const { text } = await generateText({
+    const result = streamText({
       model: groq("llama-3.3-70b-versatile"),
       prompt,
       temperature: 0.3,
     });
 
-    // Stream the response
-    const encoder = new TextEncoder();
-    const stream = new ReadableStream({
-      start(controller) {
-        controller.enqueue(encoder.encode(text));
-        controller.close();
-      },
-    });
-
-    return new Response(stream, {
-      headers: { "Content-Type": "text/plain; charset=utf-8" },
-    });
+    return result.toTextStreamResponse();
   } catch (error) {
     console.error("Interceptor error:", error);
     return NextResponse.json(
-      { error: "分析失敗" },
+      { error: "Analytics failed" },
       { status: 500 }
     );
   }

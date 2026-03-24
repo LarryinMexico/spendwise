@@ -24,7 +24,7 @@ export function useBehaviorAnalysis() {
         const { data: trendData } = await res.json();
 
         const txRes = await fetch("/api/transactions?limit=1000");
-        if (!txRes.ok) throw new Error("取得交易失敗");
+        if (!txRes.ok) throw new Error("Failed to get transactions");
         const { transactions } = await txRes.json();
 
         const weeklyPatterns = analyzeWeeklyPatterns(transactions as Transaction[]);

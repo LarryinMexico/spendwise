@@ -25,7 +25,7 @@ export async function withUserDb<T>(
 }
 
 /**
- * 專供 AI 查詢使用的 Raw SQL 管道。
+ * 專供 AI Query使用的 Raw SQL 管道。
  */
 export async function withUserRawSql(
   userId: string,

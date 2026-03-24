@@ -40,7 +40,7 @@ export function CategorySelector({
   return (
     <div className="space-y-2">
       <label htmlFor="category-select" className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70">
-        選擇類別
+        Select Category
       </label>
       <Select
         value={selectedCategory}
@@ -50,7 +50,7 @@ export function CategorySelector({
         disabled={disabled || categories.length === 0}
       >
         <SelectTrigger id="category-select" className="w-full">
-          <SelectValue placeholder="選擇要調整的類別" />
+          <SelectValue placeholder="Select category to adjust" />
         </SelectTrigger>
         <SelectContent>
           {categories.map((category) => (

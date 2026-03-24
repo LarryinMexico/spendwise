@@ -21,11 +21,11 @@ export function useUploads() {
     async function fetchUploads() {
       try {
         const res = await fetch("/api/uploads");
-        if (!res.ok) throw new Error("取得上傳記錄失敗");
+        if (!res.ok) throw new Error("Failed to fetch upload history");
         const data = await res.json();
         setUploads(data.uploads || []);
       } catch (e) {
-        setError(e instanceof Error ? e.message : "發生錯誤");
+        setError(e instanceof Error ? e.message : "An Error Occurred");
       } finally {
         setLoading(false);
       }
@@ -41,11 +41,11 @@ export function useUploads() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ uploadId }),
       });
-      if (!res.ok) throw new Error("刪除失敗");
+      if (!res.ok) throw new Error("Delete failed");
       setUploads((prev) => prev.filter((u) => u.id !== uploadId));
       return true;
     } catch (e) {
-      setError(e instanceof Error ? e.message : "刪除失敗");
+      setError(e instanceof Error ? e.message : "Delete failed");
       return false;
     }
   };

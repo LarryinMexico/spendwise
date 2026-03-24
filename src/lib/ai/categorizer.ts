@@ -10,9 +10,9 @@ const CATEGORIES = [
   "醫療",
   "教育",
   "居住",
-  "薪資/收入",
+  "薪資/Income",
   "轉帳",
-  "其他",
+  "Others",
 ];
 
 const CATEGORY_PROMPT = CATEGORIES.join("、");
@@ -34,22 +34,22 @@ export async function categorizeTransactions(
     .map((t, i) => `${i + 1}. ${t.originalDescription}`)
     .join("\n");
 
-  const prompt = `你是一個消費分類專家。請根據交易描述判断类别。
+  const prompt = `你是一個消費分類專家。請根據Transactions描述判断类别。
 
 可用类别：${CATEGORY_PROMPT}
 
-以下是待分類的交易：
+以下是待分類的Transactions：
 ${descriptions}
 
-請為每筆交易回傳 JSON 陣列，格式如下（保持原始順序）：
+請為每Transactions回傳 JSON 陣列，格式如下（保持原始順序）：
 [
-  {"category": "類別名稱", "confidence": 0.95, "reasoning": "分類理由"}
+  {"category": "Category名稱", "confidence": 0.95, "reasoning": "分類理由"}
 ]
 
 注意：
 - confidence 為 0 到 1 之間的數字
 - category 必須是可用类别中的某一個
-- 只回傳 JSON，不要有其他文字`;
+- 只回傳 JSON，不要有Others文字`;
 
   const { text } = await generateText({
     model: groq("llama-3.3-70b-versatile"),
@@ -75,7 +75,7 @@ ${descriptions}
     }
   } catch (e) {
     console.error("Failed to parse categorization response. Text was:", text, e);
-    throw new Error("AI 回應格式錯誤");
+    throw new Error("AI 回應格式Error");
   }
 
   return results;

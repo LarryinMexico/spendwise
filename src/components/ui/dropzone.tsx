@@ -29,7 +29,7 @@ export function Dropzone({
   );
 
   const onDropRejected = useCallback(() => {
-    setError("檔案類型不符或大小超過限制");
+    setError("Invalid file type or size limit exceeded");
   }, []);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -52,14 +52,14 @@ export function Dropzone({
       <input {...getInputProps()} />
       <Upload className="mx-auto h-12 w-12 text-muted-foreground mb-4" />
       {isDragActive ? (
-        <p className="text-sm text-muted-foreground">放開以上傳檔案</p>
+        <p className="text-sm text-muted-foreground">Release to upload file</p>
       ) : (
         <div className="space-y-2">
           <p className="text-sm text-muted-foreground">
-            拖曳 CSV 檔案到這裡，或點擊選擇
+            Drag and drop CSV file here, or click to select
           </p>
           <p className="text-xs text-muted-foreground/60">
-            支援 .csv 格式，最大 5MB
+            Supports .csv up to 5MB
           </p>
         </div>
       )}

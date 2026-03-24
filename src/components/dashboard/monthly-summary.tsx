@@ -46,40 +46,40 @@ export function MonthlySummary({
     <div className="grid gap-4 md:grid-cols-3">
       <Card className="shadow-none border border-[#E5E5E5] bg-[#FAFAFA] rounded-md">
         <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[#E5E5E5]">
-          <CardTitle className="text-xs font-semibold tracking-tight text-[#666666]">期間收入</CardTitle>
+          <CardTitle className="text-xs font-semibold tracking-tight text-[#666666]">Period Income</CardTitle>
           <TrendingUp className="h-3.5 w-3.5 text-[#111111]" />
         </CardHeader>
         <CardContent className="flex flex-col items-end pt-4">
           <div className="font-bungee text-2xl text-[#111111] tabular-nums">
             {formatCurrency(summary.income)}
           </div>
-          <p className="text-xs text-[#999999] mt-1">期間總收益</p>
+          <p className="text-xs text-[#999999] mt-1">Total Income</p>
         </CardContent>
       </Card>
 
       <Card className="shadow-none border border-[#E5E5E5] bg-[#FAFAFA] rounded-md">
         <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[#E5E5E5]">
-          <CardTitle className="text-xs font-semibold tracking-tight text-[#666666]">期間支出</CardTitle>
+          <CardTitle className="text-xs font-semibold tracking-tight text-[#666666]">Period Expense</CardTitle>
           <TrendingDown className="h-3.5 w-3.5 text-[#111111]" />
         </CardHeader>
         <CardContent className="flex flex-col items-end pt-4">
           <div className="font-bungee text-2xl text-[#111111] tabular-nums">
             {formatCurrency(summary.expense)}
           </div>
-          <p className="text-xs text-[#999999] mt-1">期間總支出</p>
+          <p className="text-xs text-[#999999] mt-1">Total Expense</p>
         </CardContent>
       </Card>
 
       <Card className="shadow-none border border-[#E5E5E5] bg-[#FAFAFA] rounded-md">
         <CardHeader className="flex flex-row items-center justify-between pb-2 border-b border-[#E5E5E5]">
-          <CardTitle className="text-xs font-semibold tracking-tight text-[#666666]">期間結餘</CardTitle>
+          <CardTitle className="text-xs font-semibold tracking-tight text-[#666666]">Period Balance</CardTitle>
           <Wallet className="h-3.5 w-3.5 text-[#111111]" />
         </CardHeader>
         <CardContent className="flex flex-col items-end pt-4">
           <div className="font-bungee text-2xl text-[#111111] tabular-nums">
             {formatCurrency(summary.balance)}
           </div>
-          <p className="text-xs text-[#999999] mt-1">淨盈餘 / 赤字</p>
+          <p className="text-xs text-[#999999] mt-1">Net Surplus / Deficit</p>
         </CardContent>
       </Card>
     </div>

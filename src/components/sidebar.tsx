@@ -16,13 +16,13 @@ import {
 } from "lucide-react";
 
 const navItems = [
-  { href: "/dashboard", label: "總覽", icon: LayoutDashboard },
-  { href: "/dashboard/transactions", label: "交易", icon: FileText },
-  { href: "/dashboard/analytics", label: "分析", icon: TrendingUp },
-  { href: "/dashboard/simulator", label: "模擬器", icon: Calculator },
-  { href: "/dashboard/interceptor", label: "消費決策", icon: MessageSquare },
-  { href: "/dashboard/upload", label: "上傳", icon: Upload },
-  { href: "/dashboard/uploads", label: "上傳記錄", icon: History },
+  { href: "/dashboard", label: "Overview", icon: LayoutDashboard },
+  { href: "/dashboard/transactions", label: "Transactions", icon: FileText },
+  { href: "/dashboard/analytics", label: "Analytics", icon: TrendingUp },
+  { href: "/dashboard/simulator", label: "Simulator", icon: Calculator },
+  { href: "/dashboard/interceptor", label: "Decision Setup", icon: MessageSquare },
+  { href: "/dashboard/upload", label: "Upload", icon: Upload },
+  { href: "/dashboard/uploads", label: "Upload History", icon: History },
 ];
 
 export function Sidebar() {
@@ -39,7 +39,7 @@ export function Sidebar() {
       </div>
 
       {/* Navigation Links with Scroll Container */}
-      <div className="flex-1 min-h-0 overflow-y-auto p-3 space-y-0.5">
+      <div className="flex-1 min-h-0 overflow-y-auto p-4 space-y-1">
         {navItems.map((item) => {
           const Icon = item.icon;
           const isActive = pathname === item.href;
@@ -49,13 +49,13 @@ export function Sidebar() {
               key={item.href}
               href={item.href}
               className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-all duration-150",
+                "flex items-center gap-4 rounded-md px-4 py-3 text-base font-medium transition-all duration-150",
                 isActive
                   ? "bg-[#111111] text-white"
                   : "text-[#666666] hover:bg-[#F7F7F7] hover:text-[#111111]"
               )}
             >
-              <Icon className={cn("h-4 w-4", isActive ? "text-white" : "text-[#111111]")} />
+              <Icon className={cn("h-5 w-5", isActive ? "text-white" : "text-[#111111]")} />
               {item.label}
             </Link>
           );

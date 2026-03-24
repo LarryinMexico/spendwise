@@ -38,14 +38,14 @@ export async function POST(request: NextRequest) {
     });
 
     if (targetTransactions.length === 0) {
-      return NextResponse.json({ message: "沒有待分類的交易", count: 0 });
+      return NextResponse.json({ message: "No transactions pending categorization", count: 0 });
     }
 
     // Call AI engine to generate categories
     const results = await categorizeTransactions(targetTransactions);
 
     if (results.size === 0) {
-      return NextResponse.json({ message: "AI 無法對該批交易進行分類", count: 0 });
+      return NextResponse.json({ message: "AI unable to categorize this batch of transactions", count: 0 });
     }
 
     // Write-back classification results using RLS sub-sessions
@@ -64,11 +64,11 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      message: `成功分類 ${results.size} 筆交易`,
+      message: `Successfully categorized ${results.size} Transactions`,
       count: results.size,
     });
   } catch (error) {
     console.error("Categorize error:", error);
-    return NextResponse.json({ error: "分類失敗", details: String(error) }, { status: 500 });
+    return NextResponse.json({ error: "Categorize Failed", details: String(error) }, { status: 500 });
   }
 }

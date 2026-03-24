@@ -24,17 +24,17 @@ export async function POST(request: NextRequest) {
     const headers = results.meta.fields || [];
 
     const dateCol =
-      headers.find((h) => h.includes("日期") || h.toLowerCase().includes("date")) ||
+      headers.find((h) => h.includes("Date") || h.toLowerCase().includes("date")) ||
       headers[0];
     const descCol =
       headers.find(
         (h) =>
-          h.includes("說明") ||
-          h.includes("摘要") ||
+          h.includes("Description") ||
+          h.includes("Description") ||
           h.toLowerCase().includes("description")
       ) || headers[1];
-    const expenseCol = headers.find((h) => h.includes("支出") || h.toLowerCase().includes("debit"));
-    const incomeCol = headers.find((h) => h.includes("存入") || h.toLowerCase().includes("credit"));
+    const expenseCol = headers.find((h) => h.includes("Expense") || h.toLowerCase().includes("debit"));
+    const incomeCol = headers.find((h) => h.includes("Deposit") || h.toLowerCase().includes("credit"));
 
     const valuesToInsert: {
       clerkUserId: string;
@@ -84,7 +84,7 @@ export async function POST(request: NextRequest) {
     }
 
     if (valuesToInsert.length === 0) {
-      return NextResponse.json({ success: true, message: "沒有可匯入的資料", count: 0 });
+      return NextResponse.json({ success: true, message: "No data to import", count: 0 });
     }
 
     let uploadId = "";
@@ -113,12 +113,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `成功匯入 ${valuesToInsert.length} 筆交易`,
+      message: `Successfully imported ${valuesToInsert.length} Transactions`,
       count: valuesToInsert.length,
       uploadId,
     });
   } catch (error) {
     console.error("Upload error:", error);
-    return NextResponse.json({ error: "上傳失敗", details: String(error) }, { status: 500 });
+    return NextResponse.json({ error: "Upload failed", details: String(error) }, { status: 500 });
   }
 }

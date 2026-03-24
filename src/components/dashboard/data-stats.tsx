@@ -61,7 +61,7 @@ export function DataStats() {
         <CardContent className="py-3">
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Loader2 className="h-4 w-4 animate-spin" />
-            <span>載入資料統計...</span>
+            <span>Loading statistics...</span>
           </div>
         </CardContent>
       </Card>
@@ -73,7 +73,7 @@ export function DataStats() {
       <Card className="bg-muted/30">
         <CardContent className="py-3">
           <p className="text-sm text-muted-foreground">
-            尚無資料，上傳 CSV 開始使用
+            No data. Upload CSV to start.
           </p>
         </CardContent>
       </Card>
@@ -86,18 +86,18 @@ export function DataStats() {
         <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
           <div className="flex items-center gap-2 text-muted-foreground">
             <Database className="h-4 w-4" />
-            <span>共</span>
+            <span>Total</span>
             <span className="font-medium text-foreground">
-              {stats.totalTransactions} 筆
+              {stats.totalTransactions} 
             </span>
-            <span>交易</span>
+            <span>Transactions</span>
           </div>
 
           <div className="flex items-center gap-2 text-muted-foreground">
             <Calendar className="h-4 w-4" />
-            <span>跨度</span>
+            <span>Interval</span>
             <span className="font-medium text-foreground">
-              {stats.monthsCovered} 個月
+              {stats.monthsCovered} Months
             </span>
           </div>
 
