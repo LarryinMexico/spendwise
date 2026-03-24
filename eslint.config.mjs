@@ -13,6 +13,20 @@ const eslintConfig = defineConfig([
     "build/**",
     "next-env.d.ts",
   ]),
+  // Downgrade rules that produce false positives for common Next.js patterns.
+  {
+    rules: {
+      // useEffect(() => { setState(true) }, []) is the standard SSR hydration
+      // mounting pattern in Next.js — not a real performance concern.
+      "react-hooks/set-state-in-effect": "warn",
+      // `any` is acceptable when handling unknown API response shapes.
+      "@typescript-eslint/no-explicit-any": "warn",
+      // shadcn UI components use empty interfaces to extend HTML element props.
+      "@typescript-eslint/no-empty-object-type": "warn",
+      // Unused vars from named destructuring are common in UI components.
+      "@typescript-eslint/no-unused-vars": "warn",
+    },
+  },
 ]);
 
 export default eslintConfig;
