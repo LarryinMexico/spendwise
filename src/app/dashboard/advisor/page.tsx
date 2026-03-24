@@ -3,9 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
-import { BrainCircuit, Send, Loader2, Sparkles, MessageSquare, Lightbulb } from "lucide-react";
-import { cn } from "@/lib/utils";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { BrainCircuit, Send, Loader2, Sparkles, Lightbulb } from "lucide-react";
 
 const SUGGESTIONS = [
   "I want to buy the new iPhone 16. Will it overload my budget this month?",

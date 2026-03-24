@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
-import { withUserDb, withUserRawSql } from "@/lib/db";
+import { withUserDb } from "@/lib/db";
 import { transactions } from "@/lib/db/schema";
 import { eq, desc, and, gte, lte } from "drizzle-orm";
 
@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function DELETE(request: NextRequest) {
+export async function DELETE(_request: NextRequest) {
   try {
     const { userId } = await auth();
     if (!userId) {

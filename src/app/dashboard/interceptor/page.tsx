@@ -1,12 +1,17 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Send, Loader2, Lightbulb, Sparkles, TrendingDown, TrendingUp, AlertCircle } from "lucide-react";
-import { useMonthlySummary } from "@/hooks/use-transactions";
-import { useEffect } from "react";
+
+interface Transaction {
+  originalDate: string;
+  transactionType: "income" | "expense";
+  normalizedAmount?: string;
+  originalAmount?: string;
+}
 
 export default function InterceptorPage() {
   const [question, setQuestion] = useState("");
@@ -35,18 +40,18 @@ export default function InterceptorPage() {
         const lastDay = new Date(year, month + 1, 0).getDate();
         const endOfMonth = `${year}-${pad(month + 1)}-${pad(lastDay)}`;
 
-        const monthlyTxs = transactions.filter((t: any) => {
+        const monthlyTxs = transactions.filter((t: Transaction) => {
           const date = t.originalDate;
           return date >= startOfMonth && date <= endOfMonth;
         });
 
         const income = monthlyTxs
-          .filter((t: any) => t.transactionType === "income")
-          .reduce((sum: number, t: any) => sum + parseFloat(t.normalizedAmount || t.originalAmount), 0);
+          .filter((t: Transaction) => t.transactionType === "income")
+          .reduce((sum: number, t: Transaction) => sum + parseFloat(t.normalizedAmount || t.originalAmount || "0"), 0);
 
         const expense = monthlyTxs
-          .filter((t: any) => t.transactionType === "expense")
-          .reduce((sum: number, t: any) => sum + Math.abs(parseFloat(t.normalizedAmount || t.originalAmount)), 0);
+          .filter((t: Transaction) => t.transactionType === "expense")
+          .reduce((sum: number, t: Transaction) => sum + Math.abs(parseFloat(t.normalizedAmount || t.originalAmount || "0")), 0);
 
         setFinancialData({
           monthlyIncome: income,
