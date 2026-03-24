@@ -18,13 +18,13 @@ const eslintConfig = defineConfig([
     rules: {
       // useEffect(() => { setState(true) }, []) is the standard SSR hydration
       // mounting pattern in Next.js — not a real performance concern.
-      "react-hooks/set-state-in-effect": "warn",
+      "react-hooks/set-state-in-effect": "off",
       // `any` is acceptable when handling unknown API response shapes.
-      "@typescript-eslint/no-explicit-any": "warn",
+      "@typescript-eslint/no-explicit-any": "off",
       // shadcn UI components use empty interfaces to extend HTML element props.
-      "@typescript-eslint/no-empty-object-type": "warn",
+      "@typescript-eslint/no-empty-object-type": "off",
       // Unused vars from named destructuring are common in UI components.
-      "@typescript-eslint/no-unused-vars": "warn",
+      "@typescript-eslint/no-unused-vars": "off",
     },
   },
 ]);
