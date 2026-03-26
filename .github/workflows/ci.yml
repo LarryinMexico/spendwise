@@ -41,3 +41,15 @@ jobs:
           NEXT_PUBLIC_APP_URL: "http://localhost:3000"
           NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "dummy_clerk_public_key_for_ci_build"
         run: npm run build
+
+      - name: Install Playwright Browsers
+        run: npx playwright install --with-deps
+
+      - name: Run E2E tests
+        env:
+          DATABASE_URL: "postgresql://user:pass@host:5432/db"
+          CLERK_SECRET_KEY: "dummy_secret_key_for_ci_build"
+          GROQ_API_KEY: "dummy_groq_api_key_for_ci_build"
+          NEXT_PUBLIC_APP_URL: "http://localhost:3000"
+          NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY: "dummy_clerk_public_key_for_ci_build"
+        run: npm run test:e2e
