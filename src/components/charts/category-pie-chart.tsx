@@ -71,7 +71,7 @@ export function CategoryPieChart({ dateRange }: { dateRange?: { from?: Date; to?
       </CardHeader>
       <CardContent>
         <div className="h-[300px]">
-          <ResponsiveContainer width="100%" height="100%" minHeight={0}>
+          <ResponsiveContainer width="100%" height={300}>
             <PieChart>
               <Pie
                 data={data}

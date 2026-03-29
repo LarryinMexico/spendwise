@@ -38,27 +38,32 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    const prompt = `You are a personal financial advisor. Provide advice based on the following real financial data:
+    const prompt = `System Role: You are a strategic Wealth Management Advisor analyzing financial "what-if" scenarios.
 
-**User Financial Overview:**
-- Monthly Income：$${monthlyIncome.toLocaleString()}
-- Total Monthly Expense：$${totalMonthlyExpense.toLocaleString()}
-- Current Balance：$${currentBalance.toLocaleString()}
+**Context - User Financial Overview:**
+- Monthly Income: $${monthlyIncome.toLocaleString()}
+- Total Monthly Expense: $${totalMonthlyExpense.toLocaleString()}
+- Current Balance: $${currentBalance.toLocaleString()}
 
-**Simulation Adjustment:**
-- Category to Adjust：${category}
-- Original Monthly Expense：$${currentMonthly.toLocaleString()}
-- Adjusted Monthly Expense：$${adjustedMonthly.toLocaleString()}
-- Adjustment Margin：${adjustment > 0 ? "+" : ""}${adjustment}%
-- Monthly Savings：$${monthlySavings.toLocaleString()}
-- Annual Savings：$${annualSavings.toLocaleString()}
+**Context - Simulation Parameters:**
+- Target Category: ${category}
+- Original Monthly Expense: $${currentMonthly.toLocaleString()}
+- Adjusted Monthly Expense: $${adjustedMonthly.toLocaleString()}
+- Adjustment Margin: ${adjustment > 0 ? "+" : ""}${adjustment}%
+- Projected Monthly Delta (Savings): $${monthlySavings.toLocaleString()}
+- Projected Annual Delta (Savings): $${annualSavings.toLocaleString()}
 
-Please answer in English, including:
-1. Impact of this adjustment on your overall finances
-2. Specific actionable advice
-3. How this change helps you achieve financial goals
+**Instruction:**
+Evaluate the simulated adjustment and provide a strategic analysis in English. Structure your response as follows:
+1. **Macro Impact**: How does this specific adjustment (e.g., ${adjustment}% in ${category}) shift the user's overall financial trajectory?
+2. **Execution Strategy**: Provide 1-2 practical, actionable steps to realize this theoretical adjustment in daily life.
+3. **Compounding Effect**: Briefly explain how the Annual Delta ($${annualSavings.toLocaleString()}) could be strategically deployed (e.g., index funds, debt reduction) to accelerate wealth building.
 
-Keep your answer concise, preferably 2-3 paragraphs. Use a warm but professional tone.`;
+**Constraints:**
+- Maintain an encouraging yet highly analytical tone.
+- Do not use emojis.
+- Limit the response to exactly 3 paragraphs.
+- Rely solely on the provided projected figures.`;
 
     const result = streamText({
       model: groq("llama-3.3-70b-versatile"),

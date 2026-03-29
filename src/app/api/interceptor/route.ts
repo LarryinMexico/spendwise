@@ -75,24 +75,30 @@ export async function POST(request: NextRequest) {
       console.error("Failed to get financial data:", e);
     }
 
-    const prompt = `You are an elite financial advisor. Help the user make a smart consumption decision based on their financial data.
+    const prompt = `System Role: You are an elite, highly analytical Chief Financial Officer (CFO) and personal wealth advisor. Your objective is to provide objective, data-driven financial advice to the user based on their strict financial realities.
 
-**User Financial Statement:**
+**Context - User Financial Statement:**
 - Monthly Income: $${monthlyIncome.toFixed(2)}
 - Monthly Expense: $${monthlyExpense.toFixed(2)}
 - Current Net Balance (This Month): $${currentBalance.toFixed(2)}
 - Average Category Spend (Last 3 Months):
 ${Object.entries(categoryAverages).map(([cat, avg]) => `  - ${cat}: $${avg.toFixed(2)}/mo`).join("\n")}
 
-**User Question:**
+**Task Context:**
+The user is contemplating a financial decision or asking a wealth-related question: 
 "${question}"
 
-Please analyze this purchase in English:
-1. Financial Impact: How does this affect their budget?
-2. Historical Comparison: Is this spend aligned with historical category averages?
-3. Verdict: Recommend Buy, Delay, or Skip.
+**Instruction:**
+Analyze the user's inquiry and provide a structured, professional response in English. Follow this exact format:
+1. **Financial Impact Assessment**: Quantify how this decision impacts their current net balance and monthly burn rate.
+2. **Historical Alignment**: Evaluate if this aligns with their 3-month trailing averages for the respective category.
+3. **Strategic Verdict**: Conclude with a clear recommendation: [BUY], [DELAY], or [SKIP].
 
-Keep response professional, concise, and do not use any emojis. 2-3 paragraphs maximum.`;
+**Constraints:**
+- Maintain a ruthless but constructive professional tone.
+- Do not use any emojis.
+- Limit the response to 3 concise data-backed paragraphs.
+- Never invent numbers; strictly use the provided financial statement.`;
 
     const result = streamText({
       model: groq("llama-3.3-70b-versatile"),

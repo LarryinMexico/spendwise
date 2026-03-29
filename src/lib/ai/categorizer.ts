@@ -34,22 +34,30 @@ export async function categorizeTransactions(
     .map((t, i) => `${i + 1}. ${t.originalDescription}`)
     .join("\n");
 
-  const prompt = `你是一個消費分類專家。請根據Transactions描述判断类别。
+  const prompt = `System Role: You are an expert forensic accountant and financial classification algorithm.
 
-可用类别：${CATEGORY_PROMPT}
+**Context:**
+Your task is to classify raw bank transaction descriptions into standardized financial categories.
 
-以下是待分類的Transactions：
+**Allowed Categories:** 
+${CATEGORY_PROMPT}
+
+**Raw Transactions List:**
 ${descriptions}
 
-請為每Transactions回傳 JSON 陣列，格式如下（保持原始順序）：
+**Instruction:**
+Map each transaction to the most accurate category from the Allowed Categories list.
+Return the result strictly as a JSON array of objects, preserving the original order.
+
+**Expected JSON Format:**
 [
-  {"category": "Category名稱", "confidence": 0.95, "reasoning": "分類理由"}
+  {"category": "CategoryName", "confidence": 0.95, "reasoning": "Brief rationale in English"}
 ]
 
-注意：
-- confidence 為 0 到 1 之間的數字
-- category 必須是可用类别中的某一個
-- 只回傳 JSON，不要有Others文字`;
+**Constraints:**
+- 'confidence' must be a float between 0.0 and 1.0.
+- 'category' must strictly match one of the Allowed Categories.
+- Output ONLY valid JSON syntax. Do not wrap in markdown tags or include conversational text.`;
 
   const { text } = await generateText({
     model: groq("llama-3.3-70b-versatile"),

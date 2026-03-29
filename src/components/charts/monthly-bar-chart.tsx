@@ -59,7 +59,7 @@ export function MonthlyBarChart({ dateRange }: { dateRange?: { from?: Date; to?:
       </CardHeader>
       <CardContent className="pt-6">
         <div className="h-[280px] w-full">
-          <ResponsiveContainer width="100%" height="100%" minHeight={0}>
+          <ResponsiveContainer width="100%" height={280}>
             <BarChart data={data} margin={{ top: 15, right: 10, left: 0, bottom: 5 }}>
               <CartesianGrid strokeDasharray="3 3" stroke="#F0F0F0" />
               <XAxis
