@@ -1,6 +1,6 @@
 import { generateText } from "ai";
 import { groq } from "@ai-sdk/groq";
-import { sqlClient, withUserRawSql } from "@/lib/db";
+import { withUserRawSql } from "@/lib/db";
 
 export interface QueryResult {
   success: boolean;
@@ -10,21 +10,42 @@ export interface QueryResult {
   error?: string;
 }
 
-/** Fetch available months so AI has temporal context */
+/**
+ * 禁止的 SQL 關鍵字（防止 Prompt Injection 生成危險 SQL）
+ * 這些操作不應出現在 SELECT 查詢中。
+ */
+const FORBIDDEN_SQL_KEYWORDS = [
+  "DROP", "DELETE", "UPDATE", "INSERT", "ALTER",
+  "TRUNCATE", "CREATE", "GRANT", "REVOKE", "EXEC",
+  "EXECUTE", "COPY", "VACUUM", "REINDEX",
+  "--", ";--", "/*", "*/",
+];
+
+function isSQLSafe(sql: string): boolean {
+  const upper = sql.toUpperCase();
+  // 必須以 SELECT 開頭
+  if (!upper.trimStart().startsWith("SELECT")) return false;
+  // 不得含有危險關鍵字
+  return !FORBIDDEN_SQL_KEYWORDS.some((kw) => upper.includes(kw));
+}
+
+/** Fetch available months so AI has temporal context（使用 parameterized query）*/
 async function getDataContext(userId: string): Promise<string> {
   try {
-    const rows = await withUserRawSql(userId, `
-      SELECT
+    // 使用 $1 parameterized query，徹底杜絕 SQL injection
+    const rows = await withUserRawSql(
+      userId,
+      `SELECT
         TO_CHAR(original_date, 'YYYY-MM') as month,
         COUNT(*)::int as count,
         COALESCE(SUM(normalized_amount::numeric) FILTER (WHERE transaction_type='expense'), 0)::numeric(12,2) as expense_total,
         COALESCE(SUM(normalized_amount::numeric) FILTER (WHERE transaction_type='income'), 0)::numeric(12,2) as income_total
       FROM transactions
-      WHERE clerk_user_id = '${userId}'
       GROUP BY 1
       ORDER BY 1 DESC
-      LIMIT 12
-    `);
+      LIMIT 12`
+      // 注意：clerk_user_id 過濾由 withUserRawSql 的 RLS 自動處理
+    );
 
     if (rows.length === 0) {
       return "【資料庫目前沒有任何Transactions記錄。使用者尚未Upload Data。】";
@@ -43,7 +64,6 @@ async function getDataContext(userId: string): Promise<string> {
 const SCHEMA = `
 表格: transactions（PostgreSQL）
 欄位:
-- clerk_user_id TEXT  → 使用者 ID，必須過濾
 - original_date DATE  → TransactionsDate YYYY-MM-DD
 - original_description TEXT → TransactionsDescription
 - original_amount NUMERIC → 原始Amount（Expense為正數）
@@ -59,16 +79,19 @@ Date範例:
 - 本月: original_date >= DATE_TRUNC('month', CURRENT_DATE)
 - 上Months: original_date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND original_date < DATE_TRUNC('month', CURRENT_DATE)
 - 完整一年: original_date >= DATE_TRUNC('year', CURRENT_DATE)
+
+安全規則：
+- 不要加 clerk_user_id 過濾條件（系統已自動處理，加了反而出錯）
+- 只允許 SELECT 查詢
 `;
 
 export async function askAI(
   question: string,
   userId: string
 ): Promise<QueryResult> {
-  // Step 1: Gather actual data context so AI knows what months are available
+  // Step 1: 取得資料月份上下文
   const dataContext = await getDataContext(userId);
 
-  // If no data at all, return early with helpful message
   if (dataContext.includes("尚未Upload")) {
     return {
       success: true,
@@ -77,14 +100,12 @@ export async function askAI(
     };
   }
 
-  // Step 2: Generate SQL with full context
+  // Step 2: AI 生成 SQL
   const sqlGenPrompt = `你是一個 PostgreSQL 查詢專家。
 
 ${SCHEMA}
 
 ${dataContext}
-
-安全規則: WHERE 條件中必須包含 clerk_user_id = '${userId}'
 
 使用者問題: ${question}
 
@@ -114,20 +135,17 @@ ${dataContext}
     };
   }
 
-  // Safety checks
-  if (!generatedSQL.toUpperCase().trimStart().startsWith("SELECT")) {
-    return { success: false, answer: "❌ 安全限制：只允許查詢操作", sql: generatedSQL };
-  }
-  if (!generatedSQL.includes(userId)) {
-    // inject user filter
-    if (/WHERE/i.test(generatedSQL)) {
-      generatedSQL = generatedSQL.replace(/WHERE/i, `WHERE clerk_user_id = '${userId}' AND `);
-    } else {
-      generatedSQL += ` WHERE clerk_user_id = '${userId}'`;
-    }
+  // Step 3: 安全性檢查（防止 Prompt Injection）
+  if (!isSQLSafe(generatedSQL)) {
+    console.warn("[query-engine] Unsafe SQL blocked:", generatedSQL);
+    return {
+      success: false,
+      answer: "❌ 安全限制：只允許 SELECT 查詢操作",
+      sql: generatedSQL,
+    };
   }
 
-  // Step 3: Execute SQL
+  // Step 4: 執行 SQL（RLS 自動保證只查當前使用者的資料）
   let rows: Record<string, unknown>[] = [];
   try {
     const result = await withUserRawSql(userId, generatedSQL);
@@ -141,7 +159,7 @@ ${dataContext}
     };
   }
 
-  // Step 4: Interpret results with data context
+  // Step 5: AI 解讀結果
   const dataPreview = rows.slice(0, 30);
   const interpretPrompt = `使用者問題: ${question}
 

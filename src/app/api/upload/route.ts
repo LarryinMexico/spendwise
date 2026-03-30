@@ -2,6 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { withUserDb } from "@/lib/db";
 import { transactions, uploads } from "@/lib/db/schema";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+const ALLOWED_EXTENSIONS = [".csv"];
 
 export async function POST(request: NextRequest) {
   try {
@@ -10,12 +14,41 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
+    // Rate limiting：每分鐘最多 5 次上傳
+    const { allowed, retryAfterMs } = checkRateLimit(
+      `upload:${userId}`,
+      RATE_LIMITS.UPLOAD
+    );
+    if (!allowed) {
+      return NextResponse.json(
+        { error: `上傳太頻繁，請 ${Math.ceil(retryAfterMs / 1000)} 秒後再試` },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+      );
+    }
+
     const formData = await request.formData();
     const file = formData.get("file") as File;
     const accountId = formData.get("accountId") as string | null;
 
     if (!file) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
+    }
+
+    // 檔案大小限制（10MB）
+    if (file.size > MAX_FILE_SIZE) {
+      return NextResponse.json(
+        { error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB` },
+        { status: 413 }
+      );
+    }
+
+    // 副檔名白名單（只允許 CSV）
+    const fileExt = "." + file.name.split(".").pop()?.toLowerCase();
+    if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
+      return NextResponse.json(
+        { error: "Only CSV files are allowed" },
+        { status: 400 }
+      );
     }
 
     const Papa = (await import("papaparse")).default;
@@ -118,7 +151,8 @@ export async function POST(request: NextRequest) {
       uploadId,
     });
   } catch (error) {
+    // 只記錄 server-side log，不把錯誤細節暴露給客戶端
     console.error("Upload error:", error);
-    return NextResponse.json({ error: "Upload failed", details: String(error) }, { status: 500 });
+    return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }
 }

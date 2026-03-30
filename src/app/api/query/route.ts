@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@clerk/nextjs/server";
 import { askAI } from "@/lib/ai/query-engine";
+import { checkRateLimit, RATE_LIMITS } from "@/lib/rate-limit";
 
 // Must use nodejs runtime — postgres client is not available on edge
 export const runtime = "nodejs";
@@ -11,6 +12,18 @@ export async function POST(request: NextRequest) {
 
     if (!userId) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+    }
+
+    // Rate limiting：每分鐘最多 20 次 AI 查詢
+    const { allowed, retryAfterMs } = checkRateLimit(
+      `query:${userId}`,
+      RATE_LIMITS.AI_QUERY
+    );
+    if (!allowed) {
+      return NextResponse.json(
+        { error: `請求太頻繁，請 ${Math.ceil(retryAfterMs / 1000)} 秒後再試` },
+        { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
+      );
     }
 
     const body = await request.json();
