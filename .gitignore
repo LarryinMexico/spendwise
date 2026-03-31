@@ -35,14 +35,28 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
-# agent skills
+# AI agent / editor tool configs (local only, not project code)
 .agents/
 .agent/
 skills-lock.json
 skills.lock
 .skills.lock
+.claude/
+.trae/
+.windsurf/
+.impeccable.md
 # Build Info
 *.tsbuildinfo
+
+# local dev / test scripts
+test-llm.mjs
+test-rag.js
+
+# personal notes
+update.md
+
+# IDE settings (personal preference)
+.vscode/
 
 # vercel
 .vercel
