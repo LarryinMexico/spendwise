@@ -1,71 +1,73 @@
-# AI Finance Dashboard
+# AI Finance Dashboard (SpendWise)
+
+[English](./README.md) | [繁體中文](./README.zh-TW.md)
 
 **Live Demo: [https://spendwise-gilt.vercel.app/dashboard](https://spendwise-gilt.vercel.app/dashboard)**
 
-個人理財儀表板，幫助你追蹤消費、AI 自動分類、以自然語言查詢財務數據。
+A personal finance dashboard designed to help you track spending, categorize transactions with AI, and query financial data using natural language.
 
-## 功能
+## Features
 
-### 1. CSV 上傳與解析
-- **智慧欄位對應**：自動偵測並對應常見的欄位名稱，如「交易日期」、「摘要」、「支出」、「存入」，能相容多數銀行（如玉山、國泰、中信）的 CSV 格式。
-- 拖放上傳介面
-- 批次匯入，支援單次多筆交易
-- 上傳記錄管理，可檢視與刪除歷史批次
+### 1. CSV Upload & Parsing
+- **Intelligent Field Mapping**: Automatically detects and maps common field names such as "Transaction Date", "Description", "Expense", and "Income". Compatible with CSV formats from most major banks (e.g., E.SUN, Cathay, CTBC).
+- Drag-and-drop upload interface.
+- Batch import supported for multiple transactions.
+- Upload history management to view and delete historical batches.
 
-### 2. AI 自動分類
-- 使用 Groq API (Llama 3.3 70B) 智慧分類交易
-- 10+ 消費類別：餐飲、交通、購物、娛樂、醫療、教育、居住、薪資/收入、轉帳、其他
-- 批量處理，每批最多 20 筆（避免 API rate limit）
+### 2. AI Auto-Categorization
+- Powered by **Groq API (Llama 3.3 70B)** for smart transaction classification.
+- 10+ Categories: Dining, Transport, Shopping, Entertainment, Medical, Education, Housing, Salary/Income, Transfer, Others.
+- Batch processing (up to 20 transactions per batch) to optimize API usage and avoid rate limits.
 
-### 3. 自然語言查詢 (Text-to-SQL)
-- 輸入：「這個月餐飲花了多少？」
-- AI 將自然語言轉換為 SQL 查詢
-- 三層安全防護：Prompt 限制，白名單驗證、參數化查詢
+### 3. Natural Language Querying (Text-to-SQL)
+- "How much did I spend on dining this month?"
+- AI converts natural language into secure SQL queries.
+- Three-layer security: Prompt constraints, table whitelisting, and parameterized queries.
 
-### 4. 消費趨勢分析
-- 月度收支柱狀圖
-- 類別佔比圓餅圖
-- 行為洞察：
-  - 每週消費模式分析
-  - 異常交易偵測（2 標準差）
-  - 趨勢判斷（上升/下降/穩定）
+### 4. Spending Trend Analysis
+- Monthly income vs. expense bar charts.
+- Category distribution pie charts.
+- Behavioral Insights:
+  - Weekly spending patterns analysis.
+  - Anomaly detection (2 standard deviations).
+  - Trend forecasting (Rising/Falling/Stable).
 
-### 5. 消費模擬器
-- 選擇消費類別，調整支出比例（-80% ~ +50%）
-- 即時計算 1/3/6/9/12 個月的預測
-- 視覺化折線圖對比：目前 vs 調整後趨勢
-- AI 生成財務建議
+### 5. Consumption Simulator
+- Select expense categories and adjust spending ratios (-80% to +50%).
+- Real-time projections for 1/3/6/9/12 months.
+- Visual line chart comparison: Current vs. Adjusted trends.
+- AI-generated financial advice based on simulations.
 
-### 6. 消費決策助手
-- 側邊欄即時輸入：「我想買 iPhone 16」
-- AI 根據真實財務數據分析：
-  - 月收入、支出、餘額
-  - 該類別歷史平均
-- 提供購買/延後/不購買建議
+### 6. Spending Decision Assistant
+- Real-time input in the sidebar: "Should I buy the iPhone 16?"
+- AI analysis based on live financial data:
+  - Monthly income, expenses, and current balance.
+  - Historical averages for the specific category.
+- Provides Buy/Postpone/Don't Buy recommendations.
 
-## 技術架構
+## Tech Stack
 
-- **框架**: Next.js 14 (App Router)
-- **語言**: TypeScript
-- **樣式**: Tailwind CSS
-- **UI 元件庫**: Shadcn UI
-- **圖表**: Recharts
-- **認證**: Clerk
-- **資料庫**: Supabase (PostgreSQL)
+- **Framework**: Next.js 14 (App Router)
+- **Language**: TypeScript
+- **Styling**: Tailwind CSS
+- **UI Components**: Shadcn UI
+- **Charts**: Recharts
+- **Authentication**: Clerk
+- **Database**: Supabase (PostgreSQL)
 - **ORM**: Drizzle
-- **AI**: Groq API (Llama 3.3 70B)
-- **部署**: Vercel
+- **AI Engine**: Groq API (Llama 3.3 70B)
+- **Deployment**: Vercel
 
-## 本地開發
+## Local Development
 
-### 前置需求
+### Prerequisites
 - Node.js 18+
 - npm / yarn / pnpm / bun
-- Supabase 帳號
-- Clerk 帳號
+- Supabase account
+- Clerk account
 - Groq API Key
 
-### 1. Clone 並安裝
+### 1. Clone & Install
 
 ```bash
 git clone <your-repo-url>
@@ -73,163 +75,134 @@ cd ai-finance-dashboard
 npm install
 ```
 
-### 2. 設定環境變數
+### 2. Environment Variables
 
 ```bash
 cp .env.example .env.local
 ```
 
-編輯 `.env.local`：
+Edit `.env.local`:
 
-| 變數 | 說明 | 取得方式 |
+| Variable | Description | Source |
 |------|------|----------|
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk 公開金鑰 | [Clerk Dashboard](https://clerk.com) - API Keys |
-| `CLERK_SECRET_KEY` | Clerk 私密金鑰 | [Clerk Dashboard](https://clerk.com) - API Keys |
-| `DATABASE_URL` | Supabase PostgreSQL 連線字串 | [Supabase Dashboard](https://supabase.com) - Settings - Database |
-| `GROQ_API_KEY` | Groq API 金鑰 | [Groq Console](https://console.groq.com) - API Keys |
-| `NEXT_PUBLIC_APP_URL` | 應用程式網址（本地為 `http://localhost:3000`） | - |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | Clerk Publishable Key | [Clerk Dashboard](https://clerk.com) - API Keys |
+| `CLERK_SECRET_KEY` | Clerk Secret Key | [Clerk Dashboard](https://clerk.com) - API Keys |
+| `DATABASE_URL` | Supabase PostgreSQL Connection String | [Supabase Dashboard](https://supabase.com) - Settings - Database |
+| `GROQ_API_KEY` | Groq API Key | [Groq Console](https://console.groq.com) - API Keys |
+| `NEXT_PUBLIC_APP_URL` | App URL (Local: `http://localhost:3000`) | - |
 
-### 3. 設定 Supabase
+### 3. Supabase Setup
 
-1. 在 Supabase 建立新專案
-2. 取得 `DATABASE_URL` 連線字串
-3. 執行資料庫遷移：
+1. Create a new project in Supabase.
+2. Get the `DATABASE_URL`.
+3. Run migrations:
    ```bash
    npm run db:migrate
    ```
-4. 或手動在 Supabase SQL Editor 執行 `drizzle/` 目錄下的 SQL 檔案：
-   - `0001_enable_rls.sql` - 啟用 RLS
-   - `0002_create_uploads_table.sql` - 建立上傳記錄表
+4. Alternatively, manually execute SQL files in the `drizzle/` directory via Supabase SQL Editor:
+   - `0001_enable_rls.sql` - Enable RLS
+   - `0002_create_uploads_table.sql` - Create uploads table
 
-### 4. 啟動開發伺服器
+### 4. Start Development Server
 
 ```bash
 npm run dev
 ```
 
-開啟 http://localhost:3000
+Open http://localhost:3000
 
-## 快速體驗與測試指南
+## Quick Start & Testing Guide
 
-為了讓你能無縫體驗 SpendWise 的強大 AI 分析與圖表功能，專案內已經內建了長達半年的金融測試數據。
+To help you experience SpendWise's AI analysis and visualization features immediately, the project includes 6 months of built-in financial test data.
 
-**如何使用測試資料：**
+**How to use test data:**
 
-1. 啟動並登入本地伺服器後，點擊側邊欄進入 **Upload (上傳)** 頁面。
-2. 開啟本機專案內的 `public/` 資料夾，裡面有為你準備好的 CSV 測試檔：
-   - `sample-transactions.csv` (綜合交易範例)
-   - `sample-transactions-2025-10.csv` 至 `sample-transactions-2026-02.csv` (連續多月的時間序列模擬，能完美呈現走勢圖)
-3. 將這些 `.csv` 檔案拖曳到上傳區塊完成匯入。
-4. 點擊右上角的 **AI Categorize (AI 自動分類)** 按鈕，感受大語言模型如何極速且精準地為你的花費貼上標籤。
-5. 接著就可以前往 **Dashboard**, **Analytics**, 還有 **Simulator** 頁面，觀看精美的數據圖表以及專屬你的 AI 財務長洞察報告！
+1. Start and log in to the local server, then navigate to the **Upload** page.
+2. Open the `public/` folder in the project root to find pre-made CSV test files:
+   - `sample-transactions.csv` (General examples)
+   - `sample-transactions-2025-10.csv` to `sample-transactions-2026-02.csv` (Time-series simulation for trend charts)
+3. Drag and drop these `.csv` files into the upload area.
+4. Click the **AI Categorize** button to see the LLM categorize your spending in seconds.
+5. Explore the **Dashboard**, **Analytics**, and **Simulator** pages for data visualizations and AI insights!
 
-## 使用 Docker 運行
+## Docker Support
 
-本專案支援使用 Docker 進行容器化部署，確保環境一致性。
+This project supports containerized deployment using Docker.
 
-### 1. 建置 Docker Image
+### 1. Build Image
 
 ```bash
 docker build -t spendwise-app .
 ```
 
-### 2. 運行 Docker Container
+### 2. Run Container
 
 ```bash
-docker run -p 3000:3000 \\
-  --env-file .env.local \\
+docker run -p 3000:3000 \
+  --env-file .env.local \
   spendwise-app
 ```
 
-注意：`--env-file` 會將你本地的 `.env.local` 檔案中的所有環境變數傳入容器中。請確保該檔案已設定妥當。
+*Note: Ensure your `.env.local` is correctly configured before running.*
 
-## 部署到 Vercel
+## Deployment
 
-### 1. 推送程式碼到 GitHub
+### 1. Push to GitHub
 
 ```bash
-git init
 git add .
-git commit -m "Initial commit"
-git remote add origin <your-github-repo>
-git push -u origin main
+git commit -m "Add documentation"
+git push origin main
 ```
 
-### 2. 在 Vercel 部署
+### 2. Deploy on Vercel
 
-1. 前往 [Vercel Dashboard](https://vercel.com)
-2. 點擊「Add New Project」
-3. 選擇你的 GitHub 專案
-4. 設定環境變數（與本地相同）
+1. Go to [Vercel Dashboard](https://vercel.com).
+2. "Add New Project" and select your repository.
+3. Configure environment variables (same as `.env.local`).
+4. Click "Deploy".
 
-### 3. 設定環境變數
+## Database Schema
 
-在 Vercel 專案 Settings - Environment Variables 加入：
+### `transactions` table
 
-| Name | Value | Environments |
-|------|-------|--------------|
-| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` | `pk_test_xxx` | All |
-| `CLERK_SECRET_KEY` | `sk_test_xxx` | All |
-| `DATABASE_URL` | `postgresql://...` | All |
-| `GROQ_API_KEY` | `gsk_xxx` | All |
-| `NEXT_PUBLIC_APP_URL` | `https://your-app.vercel.app` | All |
-
-### 4. 部署
-
-點擊「Deploy」，Vercel 會自動：
-- 安裝依賴
-- 執行建置
-- 設定預覽 URL
-
-## 資料庫結構
-
-### transactions 表
-
-| 欄位 | 類型 | 說明 |
+| Column | Type | Description |
 |------|------|------|
-| `id` | UUID | 主鍵 |
-| `clerk_user_id` | TEXT | Clerk 使用者 ID（用於 RLS） |
-| `account_id` | UUID | 帳戶 ID（可選） |
-| `upload_id` | UUID | 上傳批次 ID |
-| `original_date` | DATE | 原始交易日期 |
-| `original_description` | TEXT | 原始交易說明 |
-| `original_amount` | NUMERIC | 原始金額 |
-| `normalized_amount` | NUMERIC | 標準化金額（永遠為正） |
+| `id` | UUID | Primary Key |
+| `clerk_user_id` | TEXT | Clerk User ID (for RLS) |
+| `upload_id` | UUID | Batch Upload ID |
+| `original_date` | DATE | Transaction Date |
+| `original_description` | TEXT | Description |
+| `original_amount` | NUMERIC | Original Amount |
+| `normalized_amount` | NUMERIC | Absolute Value of Amount |
 | `transaction_type` | TEXT | `income` / `expense` / `transfer` |
-| `ai_category` | TEXT | AI 分類結果 |
-| `ai_category_confidence` | TEXT | AI 信心度分數 |
+| `ai_category` | TEXT | AI Classified Category |
+| `ai_category_confidence` | TEXT | Confidence Score |
 | `status` | TEXT | `pending` / `categorized` |
-| `raw_csv_data` | TEXT | 原始 CSV 資料 |
-| `created_at` | TIMESTAMP | 建立時間 |
-| `auto_classified_at` | TIMESTAMP | AI 分類時間 |
 
-### uploads 表
+### `uploads` table
 
-| 欄位 | 類型 | 說明 |
+| Column | Type | Description |
 |------|------|------|
-| `id` | UUID | 主鍵 |
-| `clerk_user_id` | TEXT | Clerk 使用者 ID |
-| `file_name` | TEXT | 原始檔案名稱 |
-| `transaction_count` | INTEGER | 匯入交易筆數 |
-| `date_range_start` | DATE | 最早交易日期 |
-| `date_range_end` | DATE | 最晚交易日期 |
-| `created_at` | TIMESTAMP | 上傳時間 |
+| `id` | UUID | Primary Key |
+| `file_name` | TEXT | Original Filename |
+| `transaction_count` | INTEGER | Number of Transactions |
+| `created_at` | TIMESTAMP | Upload Time |
 
-## 安全機制
+## Security
 
-### 認證
-- 所有 API 路由都需要 Clerk 驗證
-- 未授權請求返回 401
+### Authentication
+- All API routes are protected by Clerk. Unauthenticated requests return 401.
 
-### 資料隔離
-- Supabase Row Level Security (RLS) 啟用
-- 每個查詢自動過濾 `clerk_user_id`
+### Data Isolation
+- Supabase Row Level Security (RLS) is enabled.
+- Every query is automatically filtered by `clerk_user_id`.
 
-### Text-to-SQL 安全
-- 只允許 SELECT 查詢
-- 白名單驗證：僅 `transactions` 表
-- 禁止模式偵測（UNION, DROP, etc.）
-- 自動注入 user 隔離條件
+### Text-to-SQL Safety
+- Read-only: Only SELECT queries are allowed.
+- Whitelisting: Only the `transactions` table can be queried.
+- Pattern Matching: Blocks dangerous keywords (UNION, DROP, etc.).
+- Auto-Injected Filters: Automatically adds user-specific data isolation to SQL.
 
 ## License
 
