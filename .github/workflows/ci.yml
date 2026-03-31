@@ -31,6 +31,9 @@ jobs:
       - name: Run TypeScript Check
         run: npm run type-check
 
+      - name: Run Unit Tests
+        run: npm test
+
       - name: Run build
         env:
           # Dummy values for build — Next.js build does NOT start a server,

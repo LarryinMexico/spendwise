@@ -34,7 +34,7 @@ export function parseCSV(
             success: false,
             bankFormat: "unknown",
             transactions: [],
-            errors: ["無法識別的銀行格式"],
+            errors: ["Unrecognized bank format"],
           });
           return;
         }
@@ -80,7 +80,7 @@ export function parseCSV(
               type,
             });
           } catch (e) {
-            errors.push(`列 ${i + 1}: 解析Error`);
+            errors.push(`Row ${i + 1}: Parse error`);
           }
         }
 

@@ -21,7 +21,7 @@ export async function withAuth(
     return handler({ userId, db });
   } catch (error) {
     console.error("Auth error:", error);
-    return NextResponse.json({ error: "認證失敗" }, { status: 500 });
+    return NextResponse.json({ error: "Authentication failed" }, { status: 500 });
   }
 }
 
@@ -41,6 +41,6 @@ export async function withAuthAndRls(
     return handler({ userId, db });
   } catch (error) {
     console.error("Auth error:", error);
-    return NextResponse.json({ error: "認證失敗" }, { status: 500 });
+    return NextResponse.json({ error: "Authentication failed" }, { status: 500 });
   }
 }

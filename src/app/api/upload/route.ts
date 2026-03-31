@@ -14,14 +14,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Rate limiting：每分鐘最多 5 次上傳
+    // Rate limiting: max 5 uploads per minute
     const { allowed, retryAfterMs } = checkRateLimit(
       `upload:${userId}`,
       RATE_LIMITS.UPLOAD
     );
     if (!allowed) {
       return NextResponse.json(
-        { error: `上傳太頻繁，請 ${Math.ceil(retryAfterMs / 1000)} 秒後再試` },
+        { error: `Too many uploads. Please retry in ${Math.ceil(retryAfterMs / 1000)} seconds.` },
         { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
       );
     }
@@ -34,7 +34,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "No file provided" }, { status: 400 });
     }
 
-    // 檔案大小限制（10MB）
+    // File size limit (10MB)
     if (file.size > MAX_FILE_SIZE) {
       return NextResponse.json(
         { error: `File too large. Maximum size is ${MAX_FILE_SIZE / 1024 / 1024}MB` },
@@ -42,7 +42,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // 副檔名白名單（只允許 CSV）
+    // File extension whitelist (CSV only)
     const fileExt = "." + file.name.split(".").pop()?.toLowerCase();
     if (!ALLOWED_EXTENSIONS.includes(fileExt)) {
       return NextResponse.json(
@@ -146,12 +146,12 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
-      message: `Successfully imported ${valuesToInsert.length} Transactions`,
+      message: `Successfully imported ${valuesToInsert.length} transactions`,
       count: valuesToInsert.length,
       uploadId,
     });
   } catch (error) {
-    // 只記錄 server-side log，不把錯誤細節暴露給客戶端
+    // Log server-side only — do not expose error details to client
     console.error("Upload error:", error);
     return NextResponse.json({ error: "Upload failed" }, { status: 500 });
   }

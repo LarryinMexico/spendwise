@@ -1,10 +1,16 @@
-# AI Finance Dashboard (SpendWise)
+# SpendWise
+
+[![CI](https://github.com/LarryinMexico/spendwise/actions/workflows/ci.yml/badge.svg)](https://github.com/LarryinMexico/spendwise/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> 個人理財儀表板，幫助你追蹤消費、AI 自動分類、以自然語言查詢財務數據。
 
 [English](./README.md) | [繁體中文](./README.zh-TW.md)
 
-**Live Demo: [https://spendwise-gilt.vercel.app/dashboard](https://spendwise-gilt.vercel.app/dashboard)**
+**Demo: [https://spendwise-gilt.vercel.app/dashboard](https://spendwise-gilt.vercel.app/dashboard)**
 
-個人理財儀表板，幫助你追蹤消費、AI 自動分類、以自然語言查詢財務數據。
+![SpendWise Dashboard](./screenshot.png)
+
 
 ## 功能
 
@@ -47,7 +53,7 @@
 
 ## 技術架構
 
-- **框架**: Next.js 14 (App Router)
+- **框架**: Next.js 16 (App Router)
 - **語言**: TypeScript
 - **樣式**: Tailwind CSS
 - **UI 元件庫**: Shadcn UI

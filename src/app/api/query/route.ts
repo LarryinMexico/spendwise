@@ -14,14 +14,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Rate limiting：每分鐘最多 20 次 AI 查詢
+    // Rate limiting: max 20 AI queries per minute
     const { allowed, retryAfterMs } = checkRateLimit(
       `query:${userId}`,
       RATE_LIMITS.AI_QUERY
     );
     if (!allowed) {
       return NextResponse.json(
-        { error: `請求太頻繁，請 ${Math.ceil(retryAfterMs / 1000)} 秒後再試` },
+        { error: `Too many requests. Please retry in ${Math.ceil(retryAfterMs / 1000)} seconds.` },
         { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
       );
     }

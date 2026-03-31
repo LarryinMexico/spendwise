@@ -1,10 +1,29 @@
-# AI Finance Dashboard (SpendWise)
+# SpendWise
+
+[![CI](https://github.com/LarryinMexico/spendwise/actions/workflows/ci.yml/badge.svg)](https://github.com/LarryinMexico/spendwise/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+
+> AI-powered personal finance dashboard with natural language queries, smart categorization, and spending simulation.
 
 [English](./README.md) | [繁體中文](./README.zh-TW.md)
 
-**Live Demo: [https://spendwise-gilt.vercel.app/dashboard](https://spendwise-gilt.vercel.app/dashboard)**
+**Demo: [https://spendwise-gilt.vercel.app/dashboard](https://spendwise-gilt.vercel.app/dashboard)**
 
-A personal finance dashboard designed to help you track spending, categorize transactions with AI, and query financial data using natural language.
+![SpendWise Dashboard](./screenshot.png)
+
+## Architecture
+
+```mermaid
+graph LR
+    A[Browser / React UI] -->|REST API| B[Next.js API Routes]
+    B -->|Auth| C[Clerk]
+    B -->|ORM + RLS| D[(Supabase PostgreSQL)]
+    B -->|AI Inference| E[Groq API - Llama 3.3 70B]
+    E -->|Text-to-SQL| D
+    E -->|Categorization| D
+    B -->|Streaming| A
+    F[CSV Upload] --> B
+```
 
 ## Features
 
@@ -47,16 +66,20 @@ A personal finance dashboard designed to help you track spending, categorize tra
 
 ## Tech Stack
 
-- **Framework**: Next.js 14 (App Router)
-- **Language**: TypeScript
-- **Styling**: Tailwind CSS
-- **UI Components**: Shadcn UI
-- **Charts**: Recharts
-- **Authentication**: Clerk
-- **Database**: Supabase (PostgreSQL)
-- **ORM**: Drizzle
-- **AI Engine**: Groq API (Llama 3.3 70B)
-- **Deployment**: Vercel
+| Layer | Technology |
+|-------|-----------|
+| **Framework** | Next.js 16 (App Router) |
+| **Language** | TypeScript |
+| **Styling** | Tailwind CSS |
+| **UI Components** | Shadcn UI |
+| **Charts** | Recharts |
+| **Authentication** | Clerk |
+| **Database** | Supabase (PostgreSQL + RLS) |
+| **ORM** | Drizzle |
+| **AI Engine** | Groq API (Llama 3.3 70B) |
+| **Testing** | Vitest (Unit) + Playwright (E2E) |
+| **CI/CD** | GitHub Actions |
+| **Deployment** | Vercel |
 
 ## Local Development
 
@@ -70,8 +93,8 @@ A personal finance dashboard designed to help you track spending, categorize tra
 ### 1. Clone & Install
 
 ```bash
-git clone <your-repo-url>
-cd ai-finance-dashboard
+git clone https://github.com/LarryinMexico/spendwise.git
+cd spendwise
 npm install
 ```
 
@@ -110,6 +133,22 @@ npm run dev
 ```
 
 Open http://localhost:3000
+
+## Testing
+
+```bash
+# Run unit tests
+npm test
+
+# Run unit tests in watch mode
+npm run test:watch
+
+# Run with coverage report
+npm run test:coverage
+
+# Run E2E tests
+npm run test:e2e
+```
 
 ## Quick Start & Testing Guide
 
@@ -197,12 +236,17 @@ git push origin main
 ### Data Isolation
 - Supabase Row Level Security (RLS) is enabled.
 - Every query is automatically filtered by `clerk_user_id`.
+- Database sessions use `SET LOCAL ROLE authenticated` to activate RLS policies.
 
 ### Text-to-SQL Safety
 - Read-only: Only SELECT queries are allowed.
 - Whitelisting: Only the `transactions` table can be queried.
 - Pattern Matching: Blocks dangerous keywords (UNION, DROP, etc.).
 - Auto-Injected Filters: Automatically adds user-specific data isolation to SQL.
+
+### Rate Limiting
+- In-memory sliding window rate limiter on all AI endpoints.
+- Per-endpoint configurable limits (e.g., 20 req/min for queries, 5 req/min for uploads).
 
 ## License
 

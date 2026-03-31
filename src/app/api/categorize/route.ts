@@ -33,8 +33,7 @@ export async function POST(request: NextRequest) {
         })
         .from(transactions)
         .where(and(...conditions))
-        // Batch limit for classification load balancing
-        .limit(30);
+        .limit(30); // Batch limit for classification load balancing
     });
 
     if (targetTransactions.length === 0) {
@@ -45,10 +44,10 @@ export async function POST(request: NextRequest) {
     const results = await categorizeTransactions(targetTransactions);
 
     if (results.size === 0) {
-      return NextResponse.json({ message: "AI unable to categorize this batch of transactions", count: 0 });
+      return NextResponse.json({ message: "AI was unable to categorize this batch", count: 0 });
     }
 
-    // Write-back classification results using RLS sub-sessions
+    // Write-back classification results using RLS-scoped session
     await withUserDb(userId, async (db) => {
       for (const [id, result] of results) {
         await db
@@ -64,11 +63,11 @@ export async function POST(request: NextRequest) {
     });
 
     return NextResponse.json({
-      message: `Successfully categorized ${results.size} Transactions`,
+      message: `Successfully categorized ${results.size} transactions`,
       count: results.size,
     });
   } catch (error) {
     console.error("Categorize error:", error);
-    return NextResponse.json({ error: "Categorize Failed", details: String(error) }, { status: 500 });
+    return NextResponse.json({ error: "Categorization failed" }, { status: 500 });
   }
 }

@@ -9,22 +9,22 @@ export const sqlClient = postgres(connectionString, { prepare: false });
 export const db = drizzle(sqlClient, { schema });
 
 /**
- * 在 Drizzle Transaction 內執行查詢，並注入 Clerk userId。
+ * Execute queries within a Drizzle transaction with Clerk userId injection.
  *
- * 安全機制（雙層防護）：
- * 1. SET LOCAL ROLE authenticated — 將 postgres superuser 降權為 authenticated，
- *    使 RLS policies 生效（superuser 預設繞過 RLS）。
- * 2. set_config('app.current_user_id', ...) — 設定 session 變數，
- *    讓 RLS policy 的 current_clerk_user_id() 能正確識別當前使用者。
+ * Security mechanism (dual-layer protection):
+ * 1. SET LOCAL ROLE authenticated — downgrades the postgres superuser to
+ *    the 'authenticated' role, activating RLS policies (superuser bypasses RLS by default).
+ * 2. set_config('app.current_user_id', ...) — sets a session variable so
+ *    the RLS policy's current_clerk_user_id() function correctly identifies the current user.
  */
 export async function withUserDb<T>(
   userId: string,
   fn: (tx: PostgresJsDatabase<typeof schema>) => Promise<T>
 ): Promise<T> {
   return await db.transaction(async (tx) => {
-    // 降權為 authenticated role，啟用 RLS（使用 parameterized query 防止 injection）
+    // Downgrade to authenticated role to activate RLS (parameterized to prevent injection)
     await tx.execute(sql`SET LOCAL ROLE authenticated`);
-    // 注入 Clerk userId 供 RLS policy 使用
+    // Inject Clerk userId for RLS policy evaluation
     await tx.execute(sql`SELECT set_config('app.current_user_id', ${userId}, true)`);
     return fn(tx);
   });
@@ -32,17 +32,17 @@ export async function withUserDb<T>(
 
 
 /**
- * 專供 AI Query 使用的 Raw SQL 管道。
- * 同樣套用 SET LOCAL ROLE + app.current_user_id 雙層防護。
+ * Raw SQL pipeline for AI Query engine.
+ * Applies the same SET LOCAL ROLE + app.current_user_id dual-layer protection.
  */
 export async function withUserRawSql(
   userId: string,
   rawSql: string
 ): Promise<Record<string, unknown>[]> {
   const result = await sqlClient.begin(async (tx) => {
-    // 降權為 authenticated，啟用 RLS
+    // Downgrade to authenticated role to activate RLS
     await tx.unsafe(`SET LOCAL ROLE authenticated`);
-    // 設定 Clerk userId（TransactionSql 用 unsafe 傳參數）
+    // Set Clerk userId (using parameterized unsafe to prevent injection)
     await tx.unsafe(`SELECT set_config('app.current_user_id', $1, true)`, [userId]);
     return tx.unsafe(rawSql);
   });

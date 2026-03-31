@@ -11,8 +11,8 @@ export interface QueryResult {
 }
 
 /**
- * 禁止的 SQL 關鍵字（防止 Prompt Injection 生成危險 SQL）
- * 這些操作不應出現在 SELECT 查詢中。
+ * Forbidden SQL keywords to prevent prompt injection attacks.
+ * These operations must never appear in a SELECT query.
  */
 const FORBIDDEN_SQL_KEYWORDS = [
   "DROP", "DELETE", "UPDATE", "INSERT", "ALTER",
@@ -23,16 +23,15 @@ const FORBIDDEN_SQL_KEYWORDS = [
 
 function isSQLSafe(sql: string): boolean {
   const upper = sql.toUpperCase();
-  // 必須以 SELECT 開頭
+  // Must start with SELECT
   if (!upper.trimStart().startsWith("SELECT")) return false;
-  // 不得含有危險關鍵字
+  // Must not contain dangerous keywords
   return !FORBIDDEN_SQL_KEYWORDS.some((kw) => upper.includes(kw));
 }
 
-/** Fetch available months so AI has temporal context（使用 parameterized query）*/
+/** Fetch available months to provide temporal context to the AI (uses parameterized query) */
 async function getDataContext(userId: string): Promise<string> {
   try {
-    // 使用 $1 parameterized query，徹底杜絕 SQL injection
     const rows = await withUserRawSql(
       userId,
       `SELECT
@@ -44,75 +43,75 @@ async function getDataContext(userId: string): Promise<string> {
       GROUP BY 1
       ORDER BY 1 DESC
       LIMIT 12`
-      // 注意：clerk_user_id 過濾由 withUserRawSql 的 RLS 自動處理
+      // Note: clerk_user_id filtering is handled automatically by RLS via withUserRawSql
     );
 
     if (rows.length === 0) {
-      return "【資料庫目前沒有任何Transactions記錄。使用者尚未Upload Data。】";
+      return "[NO_DATA: The database has no transaction records. User has not uploaded any data yet.]";
     }
 
     const lines = rows.map(
       (r) =>
-        `  ${r.month}: ${r.count} ，Expense合計 NT$${r.expense_total}，Income合計 NT$${r.income_total}`
+        `  ${r.month}: ${r.count} txns, Expense total NT$${r.expense_total}, Income total NT$${r.income_total}`
     );
-    return `【使用者實際有資料的月份】\n${lines.join("\n")}`;
+    return `[User's available data months]\n${lines.join("\n")}`;
   } catch {
-    return "【無法取得資料月份資訊】";
+    return "[Unable to retrieve data month information]";
   }
 }
 
 const SCHEMA = `
-表格: transactions（PostgreSQL）
-欄位:
-- original_date DATE  → TransactionsDate YYYY-MM-DD
-- original_description TEXT → TransactionsDescription
-- original_amount NUMERIC → 原始Amount（Expense為正數）
-- normalized_amount NUMERIC → 標準化Amount（永遠為正數）
-- transaction_type TEXT → 'expense'(Expense) 或 'income'(Income)
-- ai_category TEXT → AI分類（如：餐飲、交通、購物 等）
+Table: transactions (PostgreSQL)
+Columns:
+- original_date DATE → Transaction date (YYYY-MM-DD)
+- original_description TEXT → Transaction description
+- original_amount NUMERIC → Original amount (positive for expenses)
+- normalized_amount NUMERIC → Normalized amount (always positive)
+- transaction_type TEXT → 'expense' or 'income'
+- ai_category TEXT → AI classification (e.g., Dining, Transport, Shopping)
 
-Amount計算規則:
-- Expense總額: COALESCE(SUM(normalized_amount::numeric), 0) WHERE transaction_type = 'expense'
-- Income總額: COALESCE(SUM(normalized_amount::numeric), 0) WHERE transaction_type = 'income'
+Amount calculation rules:
+- Total expenses: COALESCE(SUM(normalized_amount::numeric), 0) WHERE transaction_type = 'expense'
+- Total income: COALESCE(SUM(normalized_amount::numeric), 0) WHERE transaction_type = 'income'
 
-Date範例:
-- 本月: original_date >= DATE_TRUNC('month', CURRENT_DATE)
-- 上Months: original_date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND original_date < DATE_TRUNC('month', CURRENT_DATE)
-- 完整一年: original_date >= DATE_TRUNC('year', CURRENT_DATE)
+Date examples:
+- This month: original_date >= DATE_TRUNC('month', CURRENT_DATE)
+- Last month: original_date >= DATE_TRUNC('month', CURRENT_DATE - INTERVAL '1 month') AND original_date < DATE_TRUNC('month', CURRENT_DATE)
+- Full year: original_date >= DATE_TRUNC('year', CURRENT_DATE)
 
-安全規則：
-- 不要加 clerk_user_id 過濾條件（系統已自動處理，加了反而出錯）
-- 只允許 SELECT 查詢
+Security rules:
+- Do NOT add clerk_user_id filter (system handles it automatically via RLS — adding it will cause errors)
+- Only SELECT queries are allowed
 `;
 
 export async function askAI(
   question: string,
   userId: string
 ): Promise<QueryResult> {
-  // Step 1: 取得資料月份上下文
+  // Step 1: Get data month context
   const dataContext = await getDataContext(userId);
 
-  if (dataContext.includes("尚未Upload")) {
+  if (dataContext.includes("NO_DATA")) {
     return {
       success: true,
-      answer: "您的資料庫目前還沒有任何Transactions記錄。請先到「Upload對帳單」頁面Upload CSV 檔案，就可以開始查詢了！",
+      answer: "Your database has no transaction records yet. Please go to the Upload page to import a CSV file, then you can start querying!",
       rowCount: 0,
     };
   }
 
-  // Step 2: AI 生成 SQL
-  const sqlGenPrompt = `你是一個 PostgreSQL 查詢專家。
+  // Step 2: AI generates SQL
+  const sqlGenPrompt = `You are a PostgreSQL query expert.
 
 ${SCHEMA}
 
 ${dataContext}
 
-使用者問題: ${question}
+User question: ${question}
 
-重要: 請根據上方【使用者實際有資料的月份】來決定要查詢哪個時間範圍。
-例如使用者問「上Months」但資料只有本月，則查本月並在回覆中Description。
+Important: Use the [User's available data months] above to determine the correct time range.
+For example, if the user asks about "last month" but data only exists for this month, query this month and explain in the response.
 
-只回傳純 JSON，不要加任何Description文字:
+Return only pure JSON with no additional text:
 {"sql": "SELECT ..."}`;
 
   let generatedSQL = "";
@@ -131,21 +130,21 @@ ${dataContext}
     console.error("[query-engine] SQL generation failed:", e);
     return {
       success: false,
-      answer: "AI 無法理解這個問題，請換個方式描述（例如：「本月餐飲消費」）",
+      answer: "AI could not understand the question. Please try rephrasing (e.g., \"How much did I spend on dining this month?\")",
     };
   }
 
-  // Step 3: 安全性檢查（防止 Prompt Injection）
+  // Step 3: Security check (prevent prompt injection)
   if (!isSQLSafe(generatedSQL)) {
     console.warn("[query-engine] Unsafe SQL blocked:", generatedSQL);
     return {
       success: false,
-      answer: "❌ 安全限制：只允許 SELECT 查詢操作",
+      answer: "Security restriction: Only SELECT queries are allowed",
       sql: generatedSQL,
     };
   }
 
-  // Step 4: 執行 SQL（RLS 自動保證只查當前使用者的資料）
+  // Step 4: Execute SQL (RLS automatically ensures user data isolation)
   let rows: Record<string, unknown>[] = [];
   try {
     const result = await withUserRawSql(userId, generatedSQL);
@@ -154,26 +153,26 @@ ${dataContext}
     console.error("[query-engine] SQL execution error:", e, "\nSQL:", generatedSQL);
     return {
       success: false,
-      answer: "查詢執行失敗，請換個方式問問題",
+      answer: "Query execution failed. Please try rephrasing the question.",
       sql: generatedSQL,
     };
   }
 
-  // Step 5: AI 解讀結果
+  // Step 5: AI interprets results
   const dataPreview = rows.slice(0, 30);
-  const interpretPrompt = `使用者問題: ${question}
+  const interpretPrompt = `User question: ${question}
 
 ${dataContext}
 
-SQL 查詢結果（Total ${rows.length} ）:
+SQL query results (${rows.length} total):
 ${JSON.stringify(dataPreview, null, 2)}
 
-請用繁體中文直接回答問題，規則：
-- 直接給出關鍵數字（Amount、數等），不要描述 SQL 過程
-- Amount格式: NT$X,XXX（千分位逗號，2位小數如需要）
-- 若查詢結果為 0 但資料庫有Others月份的記錄，請Description使用者詢問的月份沒有資料，並提示可以查有資料的月份
-- 若 ai_category 顯示為 null，Description記錄尚未被 AI Categorize
-- 回答簡潔，最多 4 句`;
+Please answer the question directly in Traditional Chinese. Rules:
+- Provide key figures directly (amounts, counts) — do not describe the SQL process
+- Amount format: NT$X,XXX (with comma separators, 2 decimal places if needed)
+- If the query result is 0 but there are records for other months, inform the user that the requested month has no data and suggest months with available data
+- If ai_category is null, note that the record has not been AI-categorized yet
+- Keep it concise — maximum 4 sentences`;
 
   try {
     const { text } = await generateText({
@@ -184,8 +183,8 @@ ${JSON.stringify(dataPreview, null, 2)}
     return { success: true, answer: text, sql: generatedSQL, rowCount: rows.length };
   } catch {
     const summary = rows.length > 0
-      ? `查詢到 ${rows.length} ：\n${JSON.stringify(dataPreview, null, 2)}`
-      : "沒有找到符合條件的資料";
+      ? `Found ${rows.length} results:\n${JSON.stringify(dataPreview, null, 2)}`
+      : "No matching records found";
     return { success: true, answer: summary, sql: generatedSQL, rowCount: rows.length };
   }
 }

@@ -77,13 +77,13 @@ Return the result strictly as a JSON array of objects, preserving the original o
           results.set(transactions[i].id, {
             category: item.category,
             confidence: item.confidence ?? 0.8,
-            reasoning: item.reasoning ?? "自動分類",
+            reasoning: item.reasoning ?? "Auto-classified",
           });
        }
     }
   } catch (e) {
     console.error("Failed to parse categorization response. Text was:", text, e);
-    throw new Error("AI 回應格式Error");
+    throw new Error("AI response format error");
   }
 
   return results;

@@ -15,14 +15,14 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    // Rate limiting：每分鐘最多 15 次
+    // Rate limiting: max 15 requests per minute
     const { allowed, retryAfterMs } = checkRateLimit(
       `interceptor:${userId}`,
       RATE_LIMITS.AI_INTERCEPTOR
     );
     if (!allowed) {
       return NextResponse.json(
-        { error: `請求太頻繁，請 ${Math.ceil(retryAfterMs / 1000)} 秒後再試` },
+        { error: `Too many requests. Please retry in ${Math.ceil(retryAfterMs / 1000)} seconds.` },
         { status: 429, headers: { "Retry-After": String(Math.ceil(retryAfterMs / 1000)) } }
       );
     }
@@ -33,7 +33,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: "Question cannot be empty" }, { status: 400 });
     }
 
-    // 限制問題長度，防止 prompt injection 透過超長輸入攻擊
+    // Limit question length to prevent prompt injection via oversized input
     if (question.trim().length > 500) {
       return NextResponse.json({ error: "Question too long (max 500 chars)" }, { status: 400 });
     }
@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
         const year = now.getFullYear();
         const month = now.getMonth() + 1; // 1-indexed
 
-        // 使用 Drizzle sql tagged template（parameterized，防 injection）
+        // Parameterized query via Drizzle sql tagged template (prevents SQL injection)
         const summaryRows = await tx.execute(sql`
           SELECT
             COALESCE(SUM(CASE WHEN transaction_type = 'income' THEN normalized_amount::numeric ELSE 0 END), 0) as income_total,
@@ -66,7 +66,7 @@ export async function POST(request: NextRequest) {
           currentBalance = monthlyIncome - monthlyExpense;
         }
 
-        // 使用 parameterized query 取得 category 統計
+        // Parameterized query for category statistics
         const categoryRows = await tx.execute(sql`
           SELECT
             COALESCE(ai_category, 'Uncategorized') as category,
@@ -124,7 +124,7 @@ Analyze the user's inquiry and provide a structured, professional response in En
   } catch (error) {
     console.error("Interceptor error:", error);
     return NextResponse.json(
-      { error: "Analytics failed" },
+      { error: "Analysis failed" },
       { status: 500 }
     );
   }
